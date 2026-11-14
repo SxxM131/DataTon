@@ -84,7 +84,7 @@ GitHub 레포:
 ## 제출 레포 구조 (필수)
 
 ```
-model.py          # 피처 함수 (build_features(frame, image_root) 등)
+model.py          # 피처·모델 정의 (resolve_image_paths, extract_image_features, build_features, build_model)
 train.py          # 학습 → weights/ 에 모델 + 학습한 전처리(스케일러·PCA 등) 저장
 test.py           # weights/ 로드 → 예측 → CSV 저장. 학습·fit 절대 없음
 weights/          # 100MB 초과는 다운로드 링크를 README에 (웹 업로드는 파일당 25MB 제한)
@@ -93,6 +93,7 @@ README.md         # 실행 방법, 환경(OS·Python·GPU), 학습·검증 구�
 ```
 
 - 베이스라인(`uni_d_baseline_v7`)의 README 양식과 3파일 템플릿을 기준으로 작성
+- **현재 코드 = 베이스라인 v7 그대로** (가중치 경로만 `weights/`로 변경): 센서 5개 + 이미지 그레이스케일 통계 6개(mean·std·max·p95·p99·hot_ratio) + 과거 30초 윈도우 mean·max·delta → Imputer + StandardScaler + LogisticRegression. class_weight none/balanced 중 Validation Macro F1 높은 쪽 선택. 이대로 내면 심사 점수 낮음 → 개선 대상
 - 운영진은 `test.py`만 실행, `train.py`는 읽기만. 라이브러리 로딩 포함 오류 없이 돌아야 함
 - 파일 더 나눠도 됨. 앙상블은 가중치 전부 넣고 test.py에서 합치기
 - 대회 데이터는 레포에 올리지 않음 (`.gitignore`에 `data/`). 레포는 Public (결과 발표 후 private 가능)
@@ -148,13 +149,13 @@ python check_submission.py --data_dir ~/data/battery_data_light --final <DAKER�
 초기 세팅 (팀에서 한 명만): 드라이브의 `setup.sh` 맨 위 `DATA_URL`, `BASELINE_URL`에 각 **파일** 공유 링크를 넣고 `bash setup.sh` → 마지막에 `GPU: True` 나오면 완료.
 - `$'\r': command not found` → `sed -i 's/\r$//' setup.sh`
 
-베이스라인 실행:
+레포 실행 (서버, `~/<내이름>/DataTon`에 clone되어 있음):
 ```bash
 source ~/venv/bin/activate
-cd ~/<내이름>/uni_d_baseline_v7
+cd ~/<내이름>/DataTon && git pull
 pip install -r requirements.txt
 D=~/data/battery_data_light
-python -u train.py --data_dir $D --model_out model.joblib 2>&1 | tee train.log   # tmux 안에서
+python -u train.py --data_dir $D 2>&1 | tee train.log   # tmux 안에서 → weights/model.joblib
 python test.py --input $D/test/test.csv --image_root $D/test --output submission.csv
 ```
 
