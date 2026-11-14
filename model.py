@@ -157,11 +157,19 @@ def _prep(frame: pd.DataFrame, color: pd.DataFrame | None, cols: list[str]):
 
 
 def _lag_index(g: np.ndarray, t: np.ndarray, w: float) -> np.ndarray:
-    """각 행에 대해 같은 실험에서 시각 <= t-w 인 마지막 관측 위치 (없으면 -1)."""
-    key = g * 1e7 + t
-    j = np.searchsorted(key, key - w, side='right') - 1
-    ok = (j >= 0) & (g[np.clip(j, 0, None)] == g)
-    return np.where(ok, j, -1)
+    """각 행에 대해 같은 실험에서 시각 <= t-w 인 마지막 관측 위치 (없으면 -1). 입력은 (실험, 시각) 순으로 정렬되어 있다.
+
+    실험마다 따로 찾는다 — 실험 번호를 시각에 더한 값으로 한꺼번에 찾으면, 시각이 정수가 아닐 때 함께 들어온 실험 수에 따라
+    부동소수 반올림이 달라질 수 있다 (대회 데이터의 시각은 모두 정수라 결과는 같다).
+    """
+    out = np.full(len(t), -1, dtype=np.int64)
+    if len(t) == 0:
+        return out
+    starts = np.r_[0, np.flatnonzero(g[1:] != g[:-1]) + 1, len(g)]
+    for s, e in zip(starts[:-1], starts[1:]):
+        j = np.searchsorted(t[s:e], t[s:e] - w, side='right') - 1
+        out[s:e] = np.where(j >= 0, j + s, -1)
+    return out
 
 
 def _since(g, t, cond: np.ndarray) -> np.ndarray:
@@ -298,10 +306,8 @@ def _prev(x, g):
 
 def _lag(g, t, x, w):
     """시각 <= t-w 인 마지막 관측의 값 (없으면 NaN). 초 기준."""
-    key = g * 1e7 + t
-    j = np.searchsorted(key, key - w, side='right') - 1
-    ok = (j >= 0) & (g[np.clip(j, 0, None)] == g)
-    return np.where(ok, x[np.clip(j, 0, None)], np.nan)
+    j = _lag_index(g, t, w)
+    return np.where(j >= 0, x[np.clip(j, 0, None)], np.nan)
 
 
 def rule_features(frame: pd.DataFrame, t3: float = T1_STAGE3_RULE) -> pd.DataFrame:
@@ -857,7 +863,7 @@ def still_climbing(frame: pd.DataFrame) -> np.ndarray:
 # 6단계 진입(각형): 급상승 이후 온도 합(t1+t2)이 지금까지의 최고점보다 PEAK_DROP 넘게 내려온 적이 있으면 최고점은 이미 지났다.
 #   각형 28Ah 가열·각형 280Ah 과충전 학습 실험 23개에서 5단계 동안의 최고점 대비 하강은 최대 24.5℃였고,
 #   라벨 전체(97개 실험)에서 이 조건이 참인데 5단계 이하인 행은 없다. 행 모델은 최고점이 지난 뒤에도 몇 행 동안 5단계에 머무는 경우가 있다.
-#   공통 검증(3회): 회당 13.7행이 정답으로 바뀌고 오답으로 바뀐 행은 없다 (+0.0016, 개선 확률 0.98; 임계 25~60℃에서 같은 결론).
+#   공통 검증(3회): 회당 10.7행이 정답으로 바뀌고 오답으로 바뀐 행은 없다 (+0.0012, 개선 확률 0.96; 임계 25~60℃에서 같은 결론).
 #   원통형은 5단계 중에 온도 합이 크게 내려갔다 다시 오르는 경우가 많아 적용하지 않는다 (적용하면 −0.003~−0.05).
 PEAK_DROP = 30.0                               # ℃
 
@@ -878,9 +884,9 @@ def peak_passed(frame: pd.DataFrame) -> np.ndarray:
     num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
     t_all, s_all = num('relative_time_s'), num('meas_t1') + num('meas_t2')
     for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
-        if not target[idx[0]]:
-            continue
         idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        if not target[idx[0]]:                                     # 시간순 첫 행의 구성으로 판단 (입력 행 순서와 무관)
+            continue
         sm = s_all[idx]
         with np.errstate(invalid='ignore'):
             cm = np.fmax.accumulate(sm)
@@ -926,9 +932,9 @@ def floor_stage4(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
     sid = frame['sample_id'].astype(str).to_numpy()
     t_all = pd.to_numeric(frame['relative_time_s'], errors='coerce').to_numpy(dtype=float)
     for _, idx in pd.Series(np.arange(len(frame))).groupby(eid, sort=False).indices.items():
-        if not target[idx[0]]:
-            continue
         idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        if not target[idx[0]]:                                     # 시간순 첫 행의 구성으로 판단 (입력 행 순서와 무관)
+            continue
         x = out[idx]
         if (x >= 4).any():
             t_in = t_all[idx][int(np.argmax(x >= 4))]
