@@ -14,3 +14,6 @@ experiments/results/oof/
 
 # metrics만 예외 (제출 CSV는 Test sample_id 포함 → main에 올리지 않음)
 !metrics.csv
+
+# figure script caches (may contain sample_id / sensor rows)
+final_report/scripts/_cache/
