@@ -16,10 +16,11 @@
      - 각형 28Ah 가열·각형 280Ah 과충전: 전압 급락 이후 온도 급상승
      - 원통형 4.8Ah·6Ah 가열: 첫 전압 급락 이후 두 번째 전압 강하
      모델이 '시간이 지났다'는 이유만으로 5단계로 넘기는 것을 막는다.
- 11. 6단계 근거 확인: 6단계로 나온 행이라도 온도 합(t1+t2)이 지금까지의 최고점을 갱신하며 오르는 중이면 5단계로 둔다
-     (6단계는 온도 합의 최고점부터이므로, 아직 오르는 중이면 최고점이 오지 않았다). 10번보다 먼저 적용한다.
- 12. 되돌아가지 않기: 같은 실험에서 앞선 시점에 4단계(또는 5단계) 이상으로 판정한 적이 있으면 그 아래로 내려가지 않는다
-     (라벨은 97개 실험 모두 단계가 뒤로 가지 않는다). 10·11번 뒤에 적용한다. 3·6단계에는 적용하지 않는다(검증에서 손해).
+ 11. 6단계 근거 확인: 6단계로 나온 행이라도 온도 합(t1+t2)의 현재 값이 지금까지의 최고점이면 5단계로 둔다
+     (6단계는 온도 합의 최고점부터이므로, 아직 내려오기 시작하지 않았으면 최고점이 지났다고 볼 수 없다). 10번보다 먼저 적용한다.
+ 12. 원통형 4단계 최소 길이: 원통형에서 4단계에 들어선 뒤 30초가 지나기 전에는 5단계 이상으로 넘기지 않는다.
+ 13. 되돌아가지 않기: 같은 실험에서 앞선 시점에 4단계(또는 5단계) 이상으로 판정한 적이 있으면 그 아래로 내려가지 않는다
+     (라벨은 97개 실험 모두 단계가 뒤로 가지 않는다). 10~12번 뒤에 적용한다. 3·6단계에는 적용하지 않는다(검증에서 손해).
 
 모든 시계열 피처는 입력 frame에 있는 행만, 실험별로 relative_time_s 정렬 후 현재 이하 시각의 관측만 사용한다.
 추론 대상 실험의 전체 통계·미래 관측·다른 실험 관측을 쓰지 않는다.
@@ -786,14 +787,16 @@ def gate_stage5(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
 
 
 # 6단계: 가이드상 6단계 = 온도 합(t1+t2)이 최고점에 이른 시점부터.
-#   현재 값이 지금까지의 최고점을 갱신하면서 직전 관측보다 초당 PEAK_RATE 넘게 오르고 있으면, 최고점은 지금이거나 아직 오지 않았다.
-#   공통 검증(3회)에서 이런 행을 6 → 5로 바꾸면 41행 중 30행이 정답이 되고 8행이 오답이 된다 (+0.0024, 짝지은 부트스트랩 개선 확률 1.00).
+#   현재 값이 지금까지의 최고점(같은 값 포함)이면, 최고점은 지금이거나 아직 오지 않았다 → 6단계로 두지 않는다.
+#   공통 검증(3회)에서 이런 행을 6 → 5로 바꾸면 54행 중 37행이 정답이 되고 14행이 오답이 된다 (+0.0024, 짝지은 부트스트랩 개선 확률 1.00).
+#   '초당 0.2℃ 넘게 오를 때만' 적용하는 변형도 검증 점수는 같았지만, 5단계가 2~3배 느리게 진행되는 합성 검증에서는
+#   속도 조건이 없는 쪽이 조기 6단계 예측을 더 많이 막았다 (Macro F1 ×2: 0.9075 → 0.9124, ×3: 0.8883 → 0.8992).
+#   더 강한 조건(최고점보다 2℃ 넘게 내려오거나 10초 넘게 정체해야 6단계)은 평상시 손해(−0.0008 이하)라 넣지 않는다.
 #   반대 방향(최고점 갱신이 멈춘 지 오래면 6단계)은 중간 봉우리가 흔해서 크게 해롭다 (−0.01~−0.06) → 넣지 않는다.
-PEAK_RATE = 0.2                                # ℃/s
 
 
 def still_climbing(frame: pd.DataFrame) -> np.ndarray:
-    """온도 합(t1+t2)이 지금까지의 최고점을 갱신하며 오르는 중인가 (frame 행 위치 순서, bool). 실험별 시간순, 현재 이하 관측만 사용."""
+    """온도 합(t1+t2)의 현재 값이 지금까지의 최고점(같은 값 포함)인가 (frame 행 위치 순서, bool). 실험별 시간순, 현재 이하 관측만 사용."""
     n = len(frame)
     out = np.zeros(n, dtype=bool)
     eid = frame['experiment_id'].astype(str).to_numpy()
@@ -802,15 +805,14 @@ def still_climbing(frame: pd.DataFrame) -> np.ndarray:
     t_all, s_all = num('relative_time_s'), num('meas_t1') + num('meas_t2')
     for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
         idx = idx[np.lexsort((sid[idx], t_all[idx]))]
-        t, sm = t_all[idx], s_all[idx]
-        with np.errstate(invalid='ignore', divide='ignore'):
-            rate = np.r_[0.0, np.diff(sm) / np.diff(t)]
-            out[idx] = (sm >= np.fmax.accumulate(sm) - 1e-9) & (np.nan_to_num(rate, nan=0.0) > PEAK_RATE)
+        sm = s_all[idx]
+        with np.errstate(invalid='ignore'):
+            out[idx] = sm >= np.fmax.accumulate(sm) - 1e-9
     return out
 
 
 def gate_stage6(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
-    """6단계 예측인데 온도 합이 아직 최고점을 갱신하며 오르는 중인 행을 5단계로 둔다. 다른 행은 그대로."""
+    """6단계 예측인데 온도 합의 현재 값이 지금까지의 최고점인 행(아직 내려오기 시작하지 않음)을 5단계로 둔다. 다른 행은 그대로."""
     out = np.asarray(pred).copy()
     m = out == 6
     if m.any():
@@ -818,32 +820,89 @@ def gate_stage6(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
     return out
 
 
+# 원통형 4단계 최소 길이: 가이드의 전압 강하 판정은 '15초 창 + 복귀 여부 확인(10초 유지)'을 쓰므로, 첫 강하(4단계) 직후에는
+#   다음 강하(5단계)가 곧바로 판정되지 않는다. 학습 원통형 31개 실험의 4단계는 모두 30초 이상이고(정확히 30초가 3개),
+#   전압이 20초 만에 0V까지 내려간 실험도 5단계 라벨은 30초 시점에 시작한다.
+#   행 모델은 첫 강하가 두 행에 걸쳐 이어질 때 이를 '두 번째 강하'로 보고 5단계를 일찍 내는 경우가 있다.
+#   공통 검증(3회): 31행이 정답으로 바뀌고 오답으로 바뀐 행은 없다 (+0.0008, 개선 확률 0.95).
+#   하한을 학습 fold에서만 구해도 +0.0006 (0.95). 다른 구성·다른 단계의 최소 길이 제약은 손해라 넣지 않는다.
+STAGE4_MIN_S = 30.0
+
+
+def floor_stage4(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
+    """원통형(VDD_CFGS): 같은 실험에서 처음 4단계 이상으로 판정한 시각부터 STAGE4_MIN_S초가 지나기 전의 5단계 이상 판정을 4단계로 둔다."""
+    out = np.asarray(pred).copy()
+    target = _cfg_mask(frame, VDD_CFGS)
+    if not target.any():
+        return out
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    t_all = pd.to_numeric(frame['relative_time_s'], errors='coerce').to_numpy(dtype=float)
+    for _, idx in pd.Series(np.arange(len(frame))).groupby(eid, sort=False).indices.items():
+        if not target[idx[0]]:
+            continue
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        x = out[idx]
+        if (x >= 4).any():
+            t_in = t_all[idx][int(np.argmax(x >= 4))]
+            out[idx] = np.where((x > 4) & (t_all[idx] - t_in < STAGE4_MIN_S - 1e-9), 4, x)
+    return out
+
+
 # 되돌아가지 않기: 라벨은 97개 실험 모두 단계가 뒤로 가지 않는다. 행 단위 모델은 4단계 이후에 가끔 낮은 단계로 되돌아간다.
 #   공통 검증(3회): 4·5단계에 적용하면 +0.0057 (짝지은 부트스트랩 개선 확률 0.98, Test에 있는 구성만 +0.0020 / 0.96).
 #   3단계(−0.0005)와 6단계(−0.0005)는 첫 판정이 이른 경우가 많아 굳히면 손해 → 적용하지 않는다.
-#   근거 확인(위) 뒤에 적용하므로, 근거 없이 넘긴 판정이 굳어지지 않는다.
+#   근거 확인(위) 뒤에 적용하므로, 근거 없이 넘긴 5단계 판정이 굳어지지 않는다.
+#   4단계를 굳히는 데는 전압 급락 이벤트 관측을 요구한다: 공통 검증에서는 결과가 완전히 같고(바뀌는 행 없음),
+#   3단계가 2~3배 느리게 진행되는 합성 검증에서 근거 없이 한 번 나온 4단계가 굳어지는 것을 막는다.
 HOLD_LEVELS = (4, 5)
 
 
+def vdrop_seen(frame: pd.DataFrame) -> np.ndarray:
+    """전압 급락 이벤트(직전 관측 대비 ≤ V_DROP 또는 V < V_LOW)를 관측한 적이 있는가 (frame 행 위치 순서, bool). 과거 관측만 사용."""
+    n = len(frame)
+    out = np.zeros(n, dtype=bool)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
+    t_all, v_all = num('relative_time_s'), num('meas_v')
+    for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        v = v_all[idx]
+        with np.errstate(invalid='ignore'):
+            dv = np.r_[0.0, np.diff(v)]
+            ev = (np.nan_to_num(dv, nan=0.0) <= V_DROP) | (np.nan_to_num(v, nan=np.inf) < V_LOW)
+        out[idx] = np.maximum.accumulate(ev)
+    return out
+
+
 def hold_stage(pred: np.ndarray, frame: pd.DataFrame, levels=HOLD_LEVELS) -> np.ndarray:
-    """같은 실험의 앞선 시점(현재 포함 이전 행)에 s단계 이상으로 판정한 적이 있으면 s 미만으로 내려가지 않게 한다 (s ∈ levels)."""
+    """같은 실험의 앞선 시점(현재 포함 이전 행)에 s단계 이상으로 판정한 적이 있으면 s 미만으로 내려가지 않게 한다 (s ∈ levels).
+
+    s = 4는 전압 급락 이벤트를 관측한 뒤부터만 적용한다 (근거 없는 4단계 판정은 굳히지 않는다).
+    """
     out = np.asarray(pred).copy()
     n = len(frame)
     eid = frame['experiment_id'].astype(str).to_numpy()
     sid = frame['sample_id'].astype(str).to_numpy()
     t_all = pd.to_numeric(frame['relative_time_s'], errors='coerce').to_numpy(dtype=float)
+    vd = vdrop_seen(frame)
     for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
         idx = idx[np.lexsort((sid[idx], t_all[idx]))]
         x = out[idx]
         for lv in levels:
-            x = np.where(np.maximum.accumulate(x >= lv) & (x < lv), lv, x)
+            seen = np.maximum.accumulate(x >= lv)
+            if lv == 4:
+                seen = seen & vd[idx]
+            x = np.where(seen & (x < lv), lv, x)
         out[idx] = x
     return out
 
 
 def apply_rules(pred: np.ndarray, p_tab23: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
-    """최종 라벨 보정 순서: 2·3단계 재판정 → 6단계 근거 확인 → 5단계 근거 확인 → 4·5단계 되돌아가지 않기."""
-    return hold_stage(gate_stage5(gate_stage6(redecide_23(pred, p_tab23), frame), frame), frame)
+    """최종 라벨 보정 순서: 2·3단계 재판정 → 6단계 근거 확인 → 5단계 근거 확인 → 원통형 4단계 최소 길이 → 4·5단계 되돌아가지 않기."""
+    x = gate_stage5(gate_stage6(redecide_23(pred, p_tab23), frame), frame)
+    return hold_stage(floor_stage4(x, frame), frame)
 
 
 def to_label(p: np.ndarray) -> np.ndarray:
