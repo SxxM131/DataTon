@@ -21,6 +21,7 @@
 
 - Claude Code는 로컬(Windows, 이 폴더)에서 코드만 작성한다. 로컬엔 대회 데이터가 없다
 - 학습·추론은 서버에서만: 로컬 `git push` → 서버 `git pull` → tmux에서 train/test 실행 → Claude에겐 에러·집계 지표만 공유
+- **모든 커밋·push는 `jaehyeok` 브랜치에.** `main`에 직접 push 금지. 최종 제출 전(11/15 13:30 전)에 `main`으로 merge
 
 ## 데이터
 
@@ -152,7 +153,7 @@ python check_submission.py --data_dir ~/data/battery_data_light --final <DAKER�
 레포 실행 (서버, `~/<내이름>/DataTon`에 clone되어 있음):
 ```bash
 source ~/venv/bin/activate
-cd ~/<내이름>/DataTon && git pull
+cd ~/<내이름>/DataTon && git checkout jaehyeok && git pull
 pip install -r requirements.txt
 D=~/data/battery_data_light
 python -u train.py --data_dir $D 2>&1 | tee train.log   # tmux 안에서 → weights/model.joblib
