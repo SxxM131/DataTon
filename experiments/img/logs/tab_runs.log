@@ -1,0 +1,12 @@
+sensor+color feats (43722, 55) hand (43722, 28)
+img_tab_sensor_only                CV 0.8813 [0.852,0.905] | train-origin 0.892 val-origin 0.840 | long 0.724 short 0.897 | bat1/2/3 0.887/0.807/0.857 | per-class [0.999, 0.805, 0.896, 0.862, 0.868, 0.858] | official-val 0.8495
+    vs ref_gbdt_color_extra: diff +0.0015 ci90 [-0.003,+0.006] p_better 0.724
+img_tab_sensor_color               CV 0.8806 [0.850,0.904] | train-origin 0.891 val-origin 0.841 | long 0.735 short 0.896 | bat1/2/3 0.885/0.804/0.859 | per-class [0.999, 0.801, 0.895, 0.862, 0.867, 0.859] | official-val 0.8493
+    vs ref_gbdt_color_extra: diff +0.0008 ci90 [-0.003,+0.005] p_better 0.623
+img_tab_hand_only                  CV 0.7454 [0.712,0.773] | train-origin 0.751 val-origin 0.724 | long 0.593 short 0.753 | bat1/2/3 0.703/0.622/0.763 | per-class [0.946, 0.572, 0.787, 0.71, 0.716, 0.74] | official-val 0.7148
+    vs ref_gbdt_color_extra: diff -0.1344 ci90 [-0.160,-0.111] p_better 0.000
+img_tab_sensor_color_hand          CV 0.8676 [0.832,0.896] | train-origin 0.882 val-origin 0.819 | long 0.690 short 0.886 | bat1/2/3 0.891/0.779/0.839 | per-class [0.999, 0.747, 0.876, 0.883, 0.868, 0.832] | official-val 0.8349
+    vs ref_gbdt_color_extra: diff -0.0122 ci90 [-0.023,-0.002] p_better 0.020
+    sensor+color vs sensor_only: diff -0.0007 ci90 [-0.005,+0.003] p_better 0.382
+    sensor+color+hand vs sensor_only: diff -0.0137 ci90 [-0.025,-0.003] p_better 0.010
+    sensor+color+hand vs sensor+color: diff -0.0131 ci90 [-0.025,-0.002] p_better 0.022

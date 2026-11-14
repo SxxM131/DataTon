@@ -1,5 +1,7 @@
 # CLAUDE.md — 제6회 Uni-DTHON 데이터톤
 
+> **이어서 작업하는 세션은 `STATUS.md`를 먼저 읽을 것.** 현재 점수, 검증 체계(`experiments/common/cv.py`), 트랙별 남은 일, 제출 기록, 작업 규칙이 정리되어 있다.
+
 **과제**: 열화상 이미지 + 센서 시계열로 각 관측 시점의 배터리 열폭주 **단계(1~6) 분류**
 (미래 열폭주 발생·남은 시간 예측이 아님. 현재 시점 상태 분류)
 
@@ -39,6 +41,8 @@
 | `experiment_id` | 실험 익명 ID |
 | `relative_time_s` | 실험 첫 관측 기준 경과 시간 (초) |
 | `label` | 1~6 (train/validation만) |
+
+실제 CSV에는 위 표 외에 가스 센서 10종(`meas_ch4`~`meas_so2`), `atmp_t`, `thermal_t`, `indu_t`, `indu_t.1`, 배터리 메타(`bat_class`, `bat_cc`, `soc_status`, `tr_method`), `meas_t1_plus_t2`가 더 있다. `indu_t.1`은 Test에서 100% 결측이라 쓰지 않는다. Test는 500행 넘는 실험이 500행으로 다운샘플되어 있다 (자세한 내용은 `STATUS.md`).
 
 데이터 규칙:
 - 각 행 = 한 관측 시점. 관측 간격이 불규칙 → 시계열은 `experiment_id` + `relative_time_s` 기준으로 구성
@@ -94,7 +98,7 @@ README.md         # 실행 방법, 환경(OS·Python·GPU), 학습·검증 구�
 ```
 
 - 베이스라인(`uni_d_baseline_v7`)의 README 양식과 3파일 템플릿을 기준으로 작성
-- **현재 코드 = 베이스라인 v7 그대로** (가중치 경로만 `weights/`로 변경): 센서 5개 + 이미지 그레이스케일 통계 6개(mean·std·max·p95·p99·hot_ratio) + 과거 30초 윈도우 mean·max·delta → Imputer + StandardScaler + LogisticRegression. class_weight none/balanced 중 Validation Macro F1 높은 쪽 선택. 이대로 내면 심사 점수 낮음 → 개선 대상
+- **루트의 `model.py / train.py / test.py`는 아직 베이스라인 v7 그대로** (개선 모델은 `experiments/`에서 실험 중, 최종 통합 전. `STATUS.md` 참고) (가중치 경로만 `weights/`로 변경): 센서 5개 + 이미지 그레이스케일 통계 6개(mean·std·max·p95·p99·hot_ratio) + 과거 30초 윈도우 mean·max·delta → Imputer + StandardScaler + LogisticRegression. class_weight none/balanced 중 Validation Macro F1 높은 쪽 선택. 이대로 내면 심사 점수 낮음 → 개선 대상
 - 운영진은 `test.py`만 실행, `train.py`는 읽기만. 라이브러리 로딩 포함 오류 없이 돌아야 함
 - 파일 더 나눠도 됨. 앙상블은 가중치 전부 넣고 test.py에서 합치기
 - 대회 데이터는 레포에 올리지 않음 (`.gitignore`에 `data/`). 레포는 Public (결과 발표 후 private 가능)

@@ -1,0 +1,18 @@
+out0: held-out evalp rows 6301 image-only macroF1 0.7373 (21s)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+out1: held-out evalp rows 6459 image-only macroF1 0.7988 (21s)
+out2: held-out evalp rows 6393 image-only macroF1 0.6668 (21s)
+out3: held-out evalp rows 6530 image-only macroF1 0.7491 (21s)
+out4: held-out evalp rows 6101 image-only macroF1 0.7948 (21s)
+official: held-out evalp rows 6514 image-only macroF1 0.7252 (22s)
+pair01: held-out evalp rows 12760 image-only macroF1 0.7384 (22s)
+pair02: held-out evalp rows 12694 image-only macroF1 0.6937 (23s)
+pair03: held-out evalp rows 12831 image-only macroF1 0.7464 (32s)
+pair04: held-out evalp rows 12402 image-only macroF1 0.7521 (28s)
+pair12: held-out evalp rows 12852 image-only macroF1 0.7279 (23s)
+pair13: held-out evalp rows 12989 image-only macroF1 0.7562 (22s)
+pair14: held-out evalp rows 12560 image-only macroF1 0.7865 (23s)
+pair23: held-out evalp rows 12923 image-only macroF1 0.7367 (23s)
+pair24: held-out evalp rows 12494 image-only macroF1 0.7175 (23s)
+pair34: held-out evalp rows 12631 image-only macroF1 0.7523 (23s)
+done

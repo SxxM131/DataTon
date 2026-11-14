@@ -1,0 +1,4 @@
+[tab_all_pool] 피처 323개, pool 43722 / evalp 31784, 증강 0행, 준비 0.7s, 11실험 피처생성 43ms
+tab_all_pool                       CV 0.8953 [0.874,0.913] | train-origin 0.900 val-origin 0.878 | long 0.820 short 0.898 | bat1/2/3 0.901/0.797/0.897 | per-class [1.0, 0.765, 0.885, 0.911, 0.919, 0.892] | official-val 0.8943
+  test11 0.897±0.033 | vs ref diff +0.0155 CI90 [-0.000,+0.034] p_better 0.95 | 243s
+  top feats: meas_t1_cummax:0.130, meas_t1_max300s:0.109, meas_t1_max120s:0.105, meas_t1_max30s:0.087, meas_v_cummin:0.077, meas_t1:0.074, since_t1_45:0.048, meas_v_min300s:0.044, v_ratio_max:0.022, meas_v_mean120s:0.021, meas_v_min120s:0.015, meas_t1_mean30s:0.009, pt_frac20:0.009, v_min_ratio_max:0.008, indu_t_min300s:0.008

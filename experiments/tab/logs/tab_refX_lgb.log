@@ -1,0 +1,5 @@
+usage: run.py [-h] --name NAME [--feat {sensor5,all}] [--cfg CFG]
+              [--train_rows TRAIN_ROWS] [--weight WEIGHT] [--lgb LGB]
+              [--seeds SEEDS] [--n_repeats N_REPEATS] [--drop DROP]
+              [--no_official]
+run.py: error: argument --feat: invalid choice: 'ref' (choose from 'sensor5', 'all')

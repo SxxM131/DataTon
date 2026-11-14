@@ -8,3 +8,6 @@ __pycache__/
 .ipynb_checkpoints/
 venv/
 .venv/
+
+# OOF 예측(샘플 ID 포함)·피처 캐시는 올리지 않음
+experiments/results/oof/
