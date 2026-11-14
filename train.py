@@ -196,14 +196,14 @@ def main():
             p_tab = m.predict_proba(Xe)
             p_tab23 = m23.predict_proba(pd.concat([Xe, M.pressure_features(ev, table_tr)], axis=1)[columns23])
             ye = ev.label.to_numpy(int)
-            redo = M.gate_stage5(M.redecide_23(M.to_label(p_tab), p_tab23), ev)   # 2·3단계 재판정 + 5단계 근거 확인 (이미지 융합 없이)
+            redo = M.apply_rules(M.to_label(p_tab), p_tab23, ev)           # 2·3단계 재판정 + 6·5단계 근거 확인 (이미지 융합 없이)
             s = {'n_rows': len(ev), 'tab': macro_f1(ye, M.to_label(p_tab)), 'tab_per_class': per_class(ye, M.to_label(p_tab)),
                  'tab_redo23': macro_f1(ye, redo), 'tab_redo23_per_class': per_class(ye, redo)}
             if cnn is not None:
                 pos = pool.index.get_indexer(ev.index)
                 p_cnn = M.cnn_probs(ev, images[pos], cnn, 'cuda')
                 pf = M.fuse(p_tab, p_cnn)
-                final_pred = M.gate_stage5(M.redecide_23(M.to_label(pf), p_tab23), ev)   # test.py와 같은 최종 예측
+                final_pred = M.apply_rules(M.to_label(pf), p_tab23, ev)        # test.py와 같은 최종 예측
                 s.update(cnn=macro_f1(ye, M.to_label(p_cnn)), fused=macro_f1(ye, M.to_label(pf)),
                          fused_per_class=per_class(ye, M.to_label(pf)),
                          final=macro_f1(ye, final_pred), final_per_class=per_class(ye, final_pred))

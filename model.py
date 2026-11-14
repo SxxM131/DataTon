@@ -12,10 +12,14 @@
   9. 2·3단계 재판정: 8의 결과가 2 또는 3인 행만, 재판정 모델(테이블 단독)의 p2·p3 중 큰 쪽으로 다시 정한다.
      나머지 단계(1, 4, 5, 6)의 예측은 건드리지 않는다.
      (2·3단계 경계는 열화상에 보이지 않아 이미지 확률을 섞지 않는다 — 검증에서도 섞지 않는 쪽이 같거나 나았다.)
- 10. 5단계 근거 확인: 5단계로 나온 행은 그 구성의 5단계 이벤트가 한 번이라도 관측된 뒤에만 인정한다 (아니면 4단계).
+ 10. 5단계 근거 확인: 5단계 이상으로 나온 행은 그 구성의 5단계 이벤트가 한 번이라도 관측된 뒤에만 인정한다 (아니면 4단계).
      - 각형 28Ah 가열·각형 280Ah 과충전: 전압 급락 이후 온도 급상승
      - 원통형 4.8Ah·6Ah 가열: 첫 전압 급락 이후 두 번째 전압 강하
      모델이 '시간이 지났다'는 이유만으로 5단계로 넘기는 것을 막는다.
+ 11. 6단계 근거 확인: 6단계로 나온 행이라도 온도 합(t1+t2)이 지금까지의 최고점을 갱신하며 오르는 중이면 5단계로 둔다
+     (6단계는 온도 합의 최고점부터이므로, 아직 오르는 중이면 최고점이 오지 않았다). 10번보다 먼저 적용한다.
+ 12. 되돌아가지 않기: 같은 실험에서 앞선 시점에 4단계(또는 5단계) 이상으로 판정한 적이 있으면 그 아래로 내려가지 않는다
+     (라벨은 97개 실험 모두 단계가 뒤로 가지 않는다). 10·11번 뒤에 적용한다. 3·6단계에는 적용하지 않는다(검증에서 손해).
 
 모든 시계열 피처는 입력 frame에 있는 행만, 실험별로 relative_time_s 정렬 후 현재 이하 시각의 관측만 사용한다.
 추론 대상 실험의 전체 통계·미래 관측·다른 실험 관측을 쓰지 않는다.
@@ -768,13 +772,78 @@ def _cfg_mask(frame: pd.DataFrame, cfgs) -> np.ndarray:
 
 
 def gate_stage5(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
-    """5단계 예측인데 그 구성의 5단계 이벤트(온도 급상승 / 두 번째 전압 강하)가 아직 관측되지 않은 행을 4단계로 되돌린다."""
+    """5단계 이상 예측인데 그 구성의 5단계 이벤트(온도 급상승 / 두 번째 전압 강하)가 아직 관측되지 않은 행을 4단계로 되돌린다.
+
+    이 구성들의 학습 실험 54개는 모두 5단계를 거쳐 6단계로 간다 → 5단계 이벤트가 없으면 6단계일 수도 없다.
+    (4단계 구간을 늘린 합성 검증에서 근거 없이 6단계로 건너뛰는 예측이 있었다.)
+    """
     out = np.asarray(pred).copy()
     for cfgs, seen_fn in ((SURGE_CFGS, surge_seen), (VDD_CFGS, second_drop_seen)):
         target = _cfg_mask(frame, cfgs)
         if target.any():
-            out[target & (out == 5) & ~seen_fn(frame)] = 4
+            out[target & (out >= 5) & ~seen_fn(frame)] = 4
     return out
+
+
+# 6단계: 가이드상 6단계 = 온도 합(t1+t2)이 최고점에 이른 시점부터.
+#   현재 값이 지금까지의 최고점을 갱신하면서 직전 관측보다 초당 PEAK_RATE 넘게 오르고 있으면, 최고점은 지금이거나 아직 오지 않았다.
+#   공통 검증(3회)에서 이런 행을 6 → 5로 바꾸면 41행 중 30행이 정답이 되고 8행이 오답이 된다 (+0.0024, 짝지은 부트스트랩 개선 확률 1.00).
+#   반대 방향(최고점 갱신이 멈춘 지 오래면 6단계)은 중간 봉우리가 흔해서 크게 해롭다 (−0.01~−0.06) → 넣지 않는다.
+PEAK_RATE = 0.2                                # ℃/s
+
+
+def still_climbing(frame: pd.DataFrame) -> np.ndarray:
+    """온도 합(t1+t2)이 지금까지의 최고점을 갱신하며 오르는 중인가 (frame 행 위치 순서, bool). 실험별 시간순, 현재 이하 관측만 사용."""
+    n = len(frame)
+    out = np.zeros(n, dtype=bool)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
+    t_all, s_all = num('relative_time_s'), num('meas_t1') + num('meas_t2')
+    for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        t, sm = t_all[idx], s_all[idx]
+        with np.errstate(invalid='ignore', divide='ignore'):
+            rate = np.r_[0.0, np.diff(sm) / np.diff(t)]
+            out[idx] = (sm >= np.fmax.accumulate(sm) - 1e-9) & (np.nan_to_num(rate, nan=0.0) > PEAK_RATE)
+    return out
+
+
+def gate_stage6(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
+    """6단계 예측인데 온도 합이 아직 최고점을 갱신하며 오르는 중인 행을 5단계로 둔다. 다른 행은 그대로."""
+    out = np.asarray(pred).copy()
+    m = out == 6
+    if m.any():
+        out[m & still_climbing(frame)] = 5
+    return out
+
+
+# 되돌아가지 않기: 라벨은 97개 실험 모두 단계가 뒤로 가지 않는다. 행 단위 모델은 4단계 이후에 가끔 낮은 단계로 되돌아간다.
+#   공통 검증(3회): 4·5단계에 적용하면 +0.0057 (짝지은 부트스트랩 개선 확률 0.98, Test에 있는 구성만 +0.0020 / 0.96).
+#   3단계(−0.0005)와 6단계(−0.0005)는 첫 판정이 이른 경우가 많아 굳히면 손해 → 적용하지 않는다.
+#   근거 확인(위) 뒤에 적용하므로, 근거 없이 넘긴 판정이 굳어지지 않는다.
+HOLD_LEVELS = (4, 5)
+
+
+def hold_stage(pred: np.ndarray, frame: pd.DataFrame, levels=HOLD_LEVELS) -> np.ndarray:
+    """같은 실험의 앞선 시점(현재 포함 이전 행)에 s단계 이상으로 판정한 적이 있으면 s 미만으로 내려가지 않게 한다 (s ∈ levels)."""
+    out = np.asarray(pred).copy()
+    n = len(frame)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    t_all = pd.to_numeric(frame['relative_time_s'], errors='coerce').to_numpy(dtype=float)
+    for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        x = out[idx]
+        for lv in levels:
+            x = np.where(np.maximum.accumulate(x >= lv) & (x < lv), lv, x)
+        out[idx] = x
+    return out
+
+
+def apply_rules(pred: np.ndarray, p_tab23: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
+    """최종 라벨 보정 순서: 2·3단계 재판정 → 6단계 근거 확인 → 5단계 근거 확인 → 4·5단계 되돌아가지 않기."""
+    return hold_stage(gate_stage5(gate_stage6(redecide_23(pred, p_tab23), frame), frame), frame)
 
 
 def to_label(p: np.ndarray) -> np.ndarray:
