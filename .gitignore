@@ -17,3 +17,7 @@ experiments/results/oof/
 
 # figure script caches (may contain sample_id / sensor rows)
 final_report/scripts/_cache/
+
+# 작업 기록 문서 (레포에 올리지 않음)
+STATUS.md
+CLAUDE.md
