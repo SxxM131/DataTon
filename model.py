@@ -21,6 +21,8 @@
  12. 원통형 4단계 최소 길이: 원통형에서 4단계에 들어선 뒤 30초가 지나기 전에는 5단계 이상으로 넘기지 않는다.
  13. 되돌아가지 않기: 같은 실험에서 앞선 시점에 4단계(또는 5단계) 이상으로 판정한 적이 있으면 그 아래로 내려가지 않는다
      (라벨은 97개 실험 모두 단계가 뒤로 가지 않는다). 10~12번 뒤에 적용한다. 3·6단계에는 적용하지 않는다(검증에서 손해).
+ 14. 6단계 진입(각형): 각형 28Ah 가열·각형 280Ah 과충전에서 온도 급상승 뒤 온도 합이 최고점보다 30℃ 넘게 내려온 적이 있으면
+     그때부터 5단계 판정을 6단계로 올린다 (최고점이 이미 지났다). 마지막에 적용한다.
 
 모든 시계열 피처는 입력 frame에 있는 행만, 실험별로 relative_time_s 정렬 후 현재 이하 시각의 관측만 사용한다.
 추론 대상 실험의 전체 통계·미래 관측·다른 실험 관측을 쓰지 않는다.
@@ -407,6 +409,7 @@ def build_features(frame: pd.DataFrame, image_features: pd.DataFrame) -> pd.Data
 # ---------------------------------------------------------------------------
 # 4b. 이미지 비율 10피처 (크기 불변: 고온면적비율·p90·p99 + 직전 프레임 대비 변화)
 #     기존 pt_* 윈도우 피처 대신 쓰며, 센서·규칙 피처와 결합한다 (datathon_img 선택안 C).
+#     ※ 대안 실험용 (SOOMIN_CHANGES.md, run_img_combine.py). 최종 파이프라인(test.py, weights/)은 이 피처를 쓰지 않는다.
 # ---------------------------------------------------------------------------
 IMG10_BASE = ['pt_frac50', 'pt_frac70', 'pt_frac90', 'pt_p90', 'pt_p99']
 
@@ -760,20 +763,22 @@ def surge_seen(frame: pd.DataFrame) -> np.ndarray:
 
 
 # 원통형(4.8Ah·6Ah 가열): 가이드상 5단계 = '4단계 이후 15초 안에 전압이 25% 이상 다시 떨어진 지점(하강 완료점)'.
-#   학습 실험 31개 중 29개에서 아래 조건은 5단계 시작 행 또는 그 이전에 처음 참이 된다 (나머지 2개는 +1행, +2행 이상).
-#   4단계 구간을 5배로 늘린 합성 검증: 조건 없이 4단계 행 1,077개를 5단계로 예측 → 조건을 넣으면 308개 (Macro F1 0.825 → 0.895).
-#   공통 검증에서는 +0.0004 (바뀐 5행이 모두 정답).
+#   학습 실험 31개 중 26개에서 아래 조건은 5단계 시작 행에 정확히 처음 참이 된다 (±1행 이내 28개, 끝까지 참이 되지 않는 실험 없음).
+#   첫 급락에서 전압이 이미 0V 근처로 내려간 실험 5개 중 4개도 정확히 맞는다 (이전에는 0.5V 미만이면 근거가 있다고 보고 건너뛰었다).
+#   4단계 구간을 5배로 늘린 합성 검증: 조건 없이 4단계 행 1,077개를 5단계로 예측 → 조건을 넣으면 297개 (Macro F1 0.825 → 0.896).
+#   공통 검증: 바뀐 행은 모두 정답 쪽 (30초·0V 근처 처리의 효과 +0.0005, 개선 확률 0.86).
 VDD_CFGS = ((1, 4.8, 1), (1, 6.0, 1))          # (bat_class, bat_cc, tr_method)
 VDD_THETA = 0.25                               # 직전 15초 최고 전압 대비 하강 비율
 VDD_WINDOW_S = 15.0
-VDD_LOW_V = 0.5                                # 첫 급락에서 이미 이 값 아래로 내려가면 '두 번째 강하'를 볼 수 없다 → 근거 있음으로 둔다
+STAGE4_MIN_S = 30.0                            # 첫 급락 뒤 이 시간이 지나야 두 번째 강하로 센다 (원통형 4단계 최소 길이와 같은 값)
 
 
 def second_drop_seen(frame: pd.DataFrame) -> np.ndarray:
     """첫 전압 급락 이후 두 번째 전압 강하를 관측한 적이 있는가 (frame 행 위치 순서, bool).
 
     두 번째 강하 = 현재 전압 ≤ (1 − VDD_THETA) × (직전 15초 동안, 첫 급락 이후 관측 중 최고 전압).
-    첫 급락 이후 전압이 VDD_LOW_V 미만이면 그 시점부터 참으로 둔다. 실험별 시간순, 현재 이하 관측만 사용.
+    첫 급락 뒤 STAGE4_MIN_S(30초)가 지난 시점의 강하만 센다 — 그 전의 하강은 첫 강하가 이어지는 것으로 본다.
+    전압이 이미 0V 근처로 내려간 실험에도 같은 기준(직전 전압 대비 비율)을 쓴다. 실험별 시간순, 현재 이하 관측만 사용.
     """
     n = len(frame)
     out = np.zeros(n, dtype=bool)
@@ -794,10 +799,9 @@ def second_drop_seen(frame: pd.DataFrame) -> np.ndarray:
         lo = np.maximum(np.searchsorted(t, t - VDD_WINDOW_S, side='left'), ivd)
         hit = np.zeros(m, dtype=bool)
         for k in range(ivd + 1, m):
-            if lo[k] < k:
+            if lo[k] < k and t[k] - t[ivd] >= STAGE4_MIN_S - 1e-9:
                 ref = np.fmax.reduce(v[lo[k]:k])            # NaN은 건너뜀
                 hit[k] = bool(v[k] <= (1.0 - VDD_THETA) * ref)
-        hit |= (np.arange(m) >= ivd) & (np.nan_to_num(v, nan=np.inf) < VDD_LOW_V)
         out[idx] = np.maximum.accumulate(hit)
     return out
 
@@ -850,6 +854,51 @@ def still_climbing(frame: pd.DataFrame) -> np.ndarray:
     return out
 
 
+# 6단계 진입(각형): 급상승 이후 온도 합(t1+t2)이 지금까지의 최고점보다 PEAK_DROP 넘게 내려온 적이 있으면 최고점은 이미 지났다.
+#   각형 28Ah 가열·각형 280Ah 과충전 학습 실험 23개에서 5단계 동안의 최고점 대비 하강은 최대 24.5℃였고,
+#   라벨 전체(97개 실험)에서 이 조건이 참인데 5단계 이하인 행은 없다. 행 모델은 최고점이 지난 뒤에도 몇 행 동안 5단계에 머무는 경우가 있다.
+#   공통 검증(3회): 회당 13.7행이 정답으로 바뀌고 오답으로 바뀐 행은 없다 (+0.0016, 개선 확률 0.98; 임계 25~60℃에서 같은 결론).
+#   원통형은 5단계 중에 온도 합이 크게 내려갔다 다시 오르는 경우가 많아 적용하지 않는다 (적용하면 −0.003~−0.05).
+PEAK_DROP = 30.0                               # ℃
+
+
+def peak_passed(frame: pd.DataFrame) -> np.ndarray:
+    """SURGE_CFGS 구성에서, 온도 급상승을 본 뒤 온도 합이 '현재의 누적 최고점'보다 PEAK_DROP 넘게 내려온 적이 있는가 (frame 행 위치 순서, bool).
+
+    이후에 더 높은 최고점이 새로 나오면 다시 거짓이 된다 (그 최고점은 아직 지나지 않았으므로).
+    """
+    n = len(frame)
+    out = np.zeros(n, dtype=bool)
+    target = _cfg_mask(frame, SURGE_CFGS)
+    if not target.any():
+        return out
+    surge = surge_seen(frame)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
+    t_all, s_all = num('relative_time_s'), num('meas_t1') + num('meas_t2')
+    for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        if not target[idx[0]]:
+            continue
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        sm = s_all[idx]
+        with np.errstate(invalid='ignore'):
+            cm = np.fmax.accumulate(sm)
+            fell = (cm - sm > PEAK_DROP) & surge[idx]
+        epoch = np.r_[0, np.cumsum(cm[1:] > cm[:-1])]              # 누적 최고점이 갱신될 때마다 새 구간
+        out[idx] = pd.Series(fell).groupby(epoch).cummax().to_numpy()
+    return out
+
+
+def advance_stage6(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
+    """5단계 예측인데 (각형에서) 최고점이 이미 지난 것이 확인된 행을 6단계로 올린다. 다른 행은 그대로."""
+    out = np.asarray(pred).copy()
+    m = out == 5
+    if m.any():
+        out[m & peak_passed(frame)] = 6
+    return out
+
+
 def gate_stage6(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
     """6단계 예측인데 온도 합의 현재 값이 지금까지의 최고점인 행(아직 내려오기 시작하지 않음)을 5단계로 둔다. 다른 행은 그대로."""
     out = np.asarray(pred).copy()
@@ -865,7 +914,6 @@ def gate_stage6(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
 #   행 모델은 첫 강하가 두 행에 걸쳐 이어질 때 이를 '두 번째 강하'로 보고 5단계를 일찍 내는 경우가 있다.
 #   공통 검증(3회): 31행이 정답으로 바뀌고 오답으로 바뀐 행은 없다 (+0.0008, 개선 확률 0.95).
 #   하한을 학습 fold에서만 구해도 +0.0006 (0.95). 다른 구성·다른 단계의 최소 길이 제약은 손해라 넣지 않는다.
-STAGE4_MIN_S = 30.0
 
 
 def floor_stage4(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
@@ -939,9 +987,9 @@ def hold_stage(pred: np.ndarray, frame: pd.DataFrame, levels=HOLD_LEVELS) -> np.
 
 
 def apply_rules(pred: np.ndarray, p_tab23: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
-    """최종 라벨 보정 순서: 2·3단계 재판정 → 6단계 근거 확인 → 5단계 근거 확인 → 원통형 4단계 최소 길이 → 4·5단계 되돌아가지 않기."""
+    """최종 라벨 보정 순서: 2·3단계 재판정 → 6단계 근거 확인 → 5단계 근거 확인 → 원통형 4단계 최소 길이 → 4·5단계 되돌아가지 않기 → 6단계 진입(각형)."""
     x = gate_stage5(gate_stage6(redecide_23(pred, p_tab23), frame), frame)
-    return hold_stage(floor_stage4(x, frame), frame)
+    return advance_stage6(hold_stage(floor_stage4(x, frame), frame), frame)
 
 
 def to_label(p: np.ndarray) -> np.ndarray:
