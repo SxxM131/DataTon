@@ -485,6 +485,14 @@
 - 다른 백본 (반복 0, 시드 1개, 융합 0.2 + 규칙, 현재 CNN 대비): DINO ViT-Small/16 128px +0.0008 (p 0.86, 이미지 단독 0.809로 가장 높음). DINOv2 ViT-Small/14 126px −0.0008 (p 0.04). **임베딩을 표에 붙이기** (`experiments/img/emb_table.py`, 미세조정 없는 DINOv2·resnet18 임베딩을 학습 fold PCA 8~32개로 줄여 테이블 입력에 추가, 3회): DINOv2 −0.0005 / −0.0005 / +0.0001 / −0.0000, resnet18 −0.0014 / −0.0003 / (변화율 포함 2종은 로그 참고) — 규칙 전 테이블 단독은 0.9074 → 0.909~0.911로 오르지만 규칙 체인 뒤에는 차이가 없다. DINO 224px 2종은 GPU 메모리(팀원 작업과 겹침) 때문에 대기열에서 뺌. DINOv3는 가중치 내려받기가 멈춰 제외.
 - 사고: 01:40 KST경 GPU 작업 3개를 동시에 띄운 상태에서 팀원(soomin) 작업이 시작돼 사령탑의 `train.py` 실행이 메모리 부족으로 죽음 (팀원 작업은 영향 없음). 이후 GPU 작업은 동시에 2개까지만.
 
+## 팀 최종 결정: v9 (11/15 02:20 KST, 사용자가 팀원과 합의) — DAKER 선택·`main`·발표 자료를 모두 v9로 맞춰야 함
+
+- 배경: 11/15 00:35 KST에 `main`에 PR #3(팀원)으로 `final_report/`(슬라이드 개요·그림·사실 정리)가 들어왔고, 그 자료는 최종을 **모델 C**(팀원: 이미지 피처 10개 + 융합 0.1 + v7 규칙, Public 0.9540)로 적고 있다. 리더보드에 보이는 팀 점수 0.9540도 그 파일이다 (02:10 KST 기준 4위: 0.9563 / 0.9557 / 0.9542 / 0.9540).
+- 사령탑이 확인한 것 (팀원 폴더는 건드리지 않고 `main` 내보내기 `~/jaehyeok/cache/review/main`에서 실행): `main`의 `test.py` 출력 md5 = 팀원이 기록한 모델 C 파일 md5(`8660d119…`)와 일치, 공식 `check_submission.py` 모두 통과(검은 이미지 0.55%). v9와 모델 C는 Test 3,451행 중 19행이 다르다 (8개 실험; v9→C 방향 2→3 8행, 4→5 4행, 6→5 3행, 3→2 3행, 5→6 1행). 3회 교차검증은 v9 0.9229 / 모델 C 0.9207.
+- **맞춰야 할 세 가지 (하나라도 어긋나면 재현 불일치)**: ① DAKER 최종 파일 = `sub18_final_v9.csv` (선택하지 않으면 Public 최고점인 모델 C 파일이 잡힌다) ② `main` = 병합안 브랜치 `merge-v9-into-main` (push → PR, `final_report/`와 겹치는 파일 없음) ③ 발표 자료(`final_report/`)의 최종 모델·제출 파일·점수·이미지 구성 설명을 v9 기준으로 수정 (팀원 작업).
+- **②는 끝남**: 사용자가 push한 뒤 PR #4로 `main`에 병합 (11/15 02:22 KST, `59cd7d1`). 사령탑이 `origin/main`을 그대로 내보내(`~/jaehyeok/cache/review/main_final`) 공식 `check_submission.py --final sub18_final_v9.csv`를 돌려 7개 항목 모두 통과 확인 (검은 이미지 1.30%). `main`의 `model.py`·`test.py`·`train.py`·`weights/`·README는 병합안과 같고 `final_report/`만 더 있다.
+- 남은 것 (11/15 02:25 KST 기준): ① DAKER 최종 파일 선택 확인, ③ 발표 자료 수정, 사용자의 README 검토, EDA 아티팩트 비공개, 서버 반납 전 백업.
+
 ## (이전) 최종 모델 결정 v1 (11/14 18:10 KST, 사용자 승인)
 
 - **테이블**: LightGBM, 피처 = `tab/feats.build(..., {'extra': True, 'cum': False})` 266개 + `rules.rule_features` 30개 (`rules_tab_nocum_r3`, CV 0.9074). 추가 컬럼(가스·배터리 메타 등) 모두 사용. 97개 실험 전체로 학습.
@@ -542,7 +550,7 @@
 ## Git 상태
 
 - **최종 = v9 확정 (사용자, 11/15 02:03 KST)**. 최종 제출 파일 `sub18_final_v9.csv` (DAKER에서 직접 선택해야 함 — 안 하면 Public 최고점인 팀원 파일이 잡힌다). `jaehyeok` 브랜치 `b035663` (원격에 있음). 병합안 브랜치에는 그 위에 독립 검토 후속 수정(잠재 결함 2건, README 정정)이 한 커밋 더 있다 — 예측은 같으므로 다시 제출할 필요 없음.
-- `origin/main`(792fe4e)은 팀원 파이프라인 상태 → 그대로 제출하면 안 된다. 병합안 브랜치 `merge-v9-into-main`(로컬, worktree `~/jaehyeok/cache/wt_merge`)을 push해 PR로 `main`에 반영해야 한다 (사용자 작업, 팀원 합의 필요).
+- **`origin/main` = v9 (`59cd7d1`, PR #4, 11/15 02:22 KST 병합, 공식 점검 통과 확인).** 이후 변경은 worktree `~/jaehyeok/cache/wt_merge`(브랜치 `merge-v9-into-main`, `main`에 맞춰 둠)에서 커밋 → 사용자가 push → PR.
 - 공유 작업 폴더 `~/jaehyeok/DataTon`은 `main`에 체크아웃돼 있다 (다른 사람이 바꿈). `submissions/`, `logs` 등 추적하지 않는 파일은 그 폴더에 그대로 있다.
 - 올리지 않는 것: `weights/model.joblib`(베이스라인 가중치), 루트 `train.log`, `submissions/`, OOF 예측, `experiments/img/logs/onset_check.log`(실험 ID 포함), 사용자가 올린 가이드 문서(`~/jaehyeok/*.hwp*`), 운영진 `check_submission.py`(`~/jaehyeok/`에 있음).
 - v10 후보(ViT-Tiny)는 버림: worktree `~/jaehyeok/cache/wt_v10`(브랜치 `v10-vit-candidate`, 커밋 없음)에 그대로 있고, 바꾼 내용은 `~/jaehyeok/cache/v10_vit_candidate.patch`에도 저장. 제출 마감 뒤 지워도 된다.
