@@ -415,7 +415,7 @@ def build_features(frame: pd.DataFrame, image_features: pd.DataFrame) -> pd.Data
 # ---------------------------------------------------------------------------
 # 4b. 이미지 비율 10피처 (크기 불변: 고온면적비율·p90·p99 + 직전 프레임 대비 변화)
 #     기존 pt_* 윈도우 피처 대신 쓰며, 센서·규칙 피처와 결합한다 (datathon_img 선택안 C).
-#     ※ 대안 실험용 (SOOMIN_CHANGES.md, run_img_combine.py). 최종 파이프라인(test.py, weights/)은 이 피처를 쓰지 않는다.
+#     ※ 대안 실험용 (experiments/alt_img10/). 최종 파이프라인(test.py, weights/)은 이 피처를 쓰지 않는다.
 # ---------------------------------------------------------------------------
 IMG10_BASE = ['pt_frac50', 'pt_frac70', 'pt_frac90', 'pt_p90', 'pt_p99']
 
