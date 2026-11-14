@@ -1,0 +1,15 @@
+{
+  "all_ok": true,
+  "results": [
+    {
+      "case": "small_2exp",
+      "ok": true,
+      "msg": "n=60 labels={1: 60}"
+    },
+    {
+      "case": "shuffle_consistent",
+      "ok": true,
+      "msg": "same=True"
+    }
+  ]
+}

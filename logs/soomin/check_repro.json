@@ -1,0 +1,18 @@
+{
+  "n_rows": 3451,
+  "label_dist": {
+    "1": 1367,
+    "2": 371,
+    "3": 1004,
+    "4": 338,
+    "5": 240,
+    "6": 131
+  },
+  "shuffle_same": true,
+  "split_by_exp_same": true,
+  "truncate_future_same": true,
+  "truncate_n": 2763,
+  "blank_image_change_rate": 0.0055056505360765,
+  "blank_image_changes": true,
+  "all_pass": true
+}
