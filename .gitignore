@@ -12,7 +12,5 @@ venv/
 # OOF 예측(샘플 ID 포함)·피처 캐시는 올리지 않음
 experiments/results/oof/
 
-# soomin: allow metrics + submission CSV
+# metrics만 예외 (제출 CSV는 Test sample_id 포함 → main에 올리지 않음)
 !metrics.csv
-!submissions/soomin/
-!submissions/soomin/*.csv
