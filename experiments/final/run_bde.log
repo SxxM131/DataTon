@@ -1,0 +1,47 @@
++ cd /home/ubuntu/jaehyeok/DataTon
++ source /home/ubuntu/venv/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /usr/bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/home/ubuntu/venv
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/home/ubuntu/.vscode-server/cli/servers/Stable-69047191fc427f2f92828279aae1d90d8eeda7ab/server/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+++ PATH=/home/ubuntu/venv/bin:/home/ubuntu/.vscode-server/cli/servers/Stable-69047191fc427f2f92828279aae1d90d8eeda7ab/server/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(venv) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(venv) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /usr/bin/bash -o -n '' ']'
+++ hash -r
++ D=/home/ubuntu/data/battery_data_light
++ C=/home/ubuntu/jaehyeok/cache/final
++ python -u train.py --data_dir /home/ubuntu/data/battery_data_light --skip_eval --weights_dir /home/ubuntu/jaehyeok/cache/final/weights_run2
+데이터 43722행 / 실험 97개, 색 통계 27s
+저장: /home/ubuntu/jaehyeok/cache/final/weights_run2/tab_lgbm.joblib (피처 296개)
+CNN 가중치 복사: /home/ubuntu/jaehyeok/cache/img/cnn_pairdiff_full.pt → /home/ubuntu/jaehyeok/cache/final/weights_run2/cnn_pairdiff.pt
+완료 30s
++ /usr/bin/time -f 'wall %e s' python test.py --input /home/ubuntu/data/battery_data_light/test/test.csv --image_root /home/ubuntu/data/battery_data_light/test --output /home/ubuntu/jaehyeok/cache/final/run1.csv --save_proba /home/ubuntu/jaehyeok/cache/final/run1_proba.pkl
+저장: /home/ubuntu/jaehyeok/cache/final/run1.csv (3451행, device=cuda, 10.5s) 분포 {1: 1367, 2: 398, 3: 982, 4: 266, 5: 302, 6: 136}
+wall 11.38 s
++ /usr/bin/time -f 'wall %e s' python test.py --input /home/ubuntu/data/battery_data_light/test/test.csv --image_root /home/ubuntu/data/battery_data_light/test --output /home/ubuntu/jaehyeok/cache/final/run2.csv --save_proba /home/ubuntu/jaehyeok/cache/final/run2_proba.pkl
+저장: /home/ubuntu/jaehyeok/cache/final/run2.csv (3451행, device=cuda, 10.7s) 분포 {1: 1367, 2: 398, 3: 982, 4: 266, 5: 302, 6: 136}
+wall 11.62 s
++ python test.py --input /home/ubuntu/data/battery_data_light/test/test.csv --image_root /home/ubuntu/data/battery_data_light/test --output /home/ubuntu/jaehyeok/cache/final/run_w2.csv --save_proba /home/ubuntu/jaehyeok/cache/final/run_w2_proba.pkl --weights_dir /home/ubuntu/jaehyeok/cache/final/weights_run2
+저장: /home/ubuntu/jaehyeok/cache/final/run_w2.csv (3451행, device=cuda, 10.7s) 분포 {1: 1367, 2: 398, 3: 982, 4: 266, 5: 302, 6: 136}
++ /usr/bin/time -f 'wall %e s' python test.py --input /home/ubuntu/data/battery_data_light/test/test.csv --image_root /home/ubuntu/data/battery_data_light/test --output /home/ubuntu/jaehyeok/cache/final/run_cpu.csv --save_proba /home/ubuntu/jaehyeok/cache/final/run_cpu_proba.pkl --device cpu
+저장: /home/ubuntu/jaehyeok/cache/final/run_cpu.csv (3451행, device=cpu, 29.0s) 분포 {1: 1367, 2: 398, 3: 982, 4: 266, 5: 302, 6: 136}
+wall 29.83 s
++ python test.py --input /home/ubuntu/data/battery_data_light/test/test.csv --image_root /home/ubuntu/jaehyeok/cache/final/black_test --output /home/ubuntu/jaehyeok/cache/final/run_black.csv --save_proba /home/ubuntu/jaehyeok/cache/final/run_black_proba.pkl
+저장: /home/ubuntu/jaehyeok/cache/final/run_black.csv (3451행, device=cuda, 9.6s) 분포 {1: 1367, 2: 297, 3: 1086, 4: 325, 5: 229, 6: 147}
++ echo ALLDONE
+ALLDONE

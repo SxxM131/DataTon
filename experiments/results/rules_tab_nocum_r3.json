@@ -1,0 +1,102 @@
+{
+ "name": "rules_tab_nocum_r3",
+ "cv": 0.9074005015387749,
+ "cv_per_rep": [
+  0.9029,
+  0.9082,
+  0.9111
+ ],
+ "per_class": [
+  0.9999,
+  0.8138,
+  0.9022,
+  0.9073,
+  0.9222,
+  0.899
+ ],
+ "origin_train": 0.9117452562590752,
+ "origin_val": 0.8907148726215947,
+ "long_exps": 0.8061663070416315,
+ "short_exps": 0.9161688314823376,
+ "bat1": 0.9101640565325583,
+ "bat2": 0.8244881614449612,
+ "bat3": 0.9006859124311036,
+ "boot_ci90": [
+  0.8868924693846455,
+  0.9241259336882004
+ ],
+ "test11_mean": 0.9079881263853656,
+ "test11_sd": 0.031246488904648,
+ "test11_q05_q95": [
+  0.8505753326981733,
+  0.9497782973717467
+ ],
+ "public_minus_private_sd": 0.013888353725789672,
+ "cmp_tab_all_nocum_r3": {
+  "diff": 0.0034318848905987576,
+  "ci90": [
+   -0.002363474453042713,
+   0.009043882223293862
+  ],
+  "p_a_better": 0.84725,
+  "repeats": [
+   "pred_r0",
+   "pred_r1",
+   "pred_r2"
+  ]
+ },
+ "cmp_tab_all_pool": {
+  "diff": 0.007633455926622901,
+  "ci90": [
+   -0.00035616352776648427,
+   0.016072362112648543
+  ],
+  "p_a_better": 0.93875,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "cmp_ref_gbdt_color_extra": {
+  "diff": 0.021122313090188527,
+  "ci90": [
+   0.00953226636156999,
+   0.03500518262402484
+  ],
+  "p_a_better": 1.0,
+  "repeats": [
+   "pred_r0",
+   "pred_r1",
+   "pred_r2"
+  ]
+ },
+ "args": {
+  "name": "rules_tab_nocum_r3",
+  "mode": "tab+rules",
+  "cfg": "{\"cum\":false}",
+  "lgb": "{\"learning_rate\":0.1,\"n_estimators\":200,\"colsample_bytree\":0.3,\"max_bin\":63}",
+  "n_repeats": 3,
+  "drop_rules": "",
+  "compare": "tab_all_nocum_r3,tab_all_pool,ref_gbdt_color_extra"
+ },
+ "cfg": {
+  "extra": true,
+  "cum": false
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.1,
+  "n_estimators": 200,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 1.0,
+  "n_jobs": 4,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ },
+ "n_feat": 296
+}

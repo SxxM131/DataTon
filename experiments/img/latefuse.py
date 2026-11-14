@@ -22,7 +22,9 @@ T = pd.read_pickle(L.HERE.parent / f'results/oof/{tab_name}.pkl').reindex(evalp.
 Pt = T[[f'p{k}_r0' for k in range(1, 7)]].to_numpy(float)
 base = T[['pred_r0']].astype(int)
 yy = evalp.label.to_numpy()
-print(cv.summary_line(tab_name, cv.evaluate(evalp, base)), flush=True)
+ON = L.onset_rows(evalp)
+onacc = lambda o: [round(float((o.pred_r0.to_numpy()[r] == yy[r]).mean()), 3) for r in ON.values()]
+print(cv.summary_line(tab_name + ' (r0)', cv.evaluate(evalp, base)), '| 시작 행 정확도 4/5/6', onacc(base), flush=True)
 
 
 def oof_of(P):
@@ -57,7 +59,7 @@ for tag, Pc in C.items():
         print(f"  w={w:.2f} CV {r['cv']:.4f} long {r['long_exps']:.3f} short {r['short_exps']:.3f} per-class {np.round(r['per_class'], 3).tolist()} | "
               f"vs tab diff {c['diff']:+.4f} ci90 [{c['ci90'][0]:+.3f},{c['ci90'][1]:+.3f}] p_better {c['p_a_better']:.2f} | "
               f"2→3 {((yy == 2) & (o.pred_r0 == 3)).sum()} 3→2 {((yy == 3) & (o.pred_r0 == 2)).sum()} | "
-              f"이미지 바꾸기: 변경 {(o2.pred_r0 != o.pred_r0).mean():.3f}, 바꾼 뒤 F1 {cv.macro_f1(yy, o2.pred_r0):.4f}", flush=True)
+              f"시작 행 4/5/6 {onacc(o)} | 이미지 바꾸기: 변경 {(o2.pred_r0 != o.pred_r0).mean():.3f}, 바꾼 뒤 F1 {cv.macro_f1(yy, o2.pred_r0):.4f}", flush=True)
         if w == 0.2:
             cv.save_result(f'img_latefuse_{tab_name}_{tag.split("(")[0]}_w20', cv.evaluate(evalp, o), o)
 print(f"(참고) 테이블 2→3 {((yy == 2) & (base.pred_r0 == 3)).sum()} 3→2 {((yy == 3) & (base.pred_r0 == 2)).sum()}")
@@ -78,4 +80,4 @@ for tag, Pc in C.items():
     r = cv.evaluate(evalp, o)
     cv.save_result(f'img_latefuse_{tab_name}_{tag.split("(")[0]}_nestedw', r, o)
     print(f"[중첩 w] CNN {tag}: fold별 w {chosen} → CV {r['cv']:.4f} [{r['boot_ci90'][0]:.3f},{r['boot_ci90'][1]:.3f}] long {r['long_exps']:.3f} short {r['short_exps']:.3f} "
-          f"per-class {np.round(r['per_class'], 3).tolist()} | vs tab diff {c['diff']:+.4f} ci90 [{c['ci90'][0]:+.3f},{c['ci90'][1]:+.3f}] p_better {c['p_a_better']:.2f}", flush=True)
+          f"per-class {np.round(r['per_class'], 3).tolist()} | 시작 행 4/5/6 {onacc(o)} | vs tab diff {c['diff']:+.4f} ci90 [{c['ci90'][0]:+.3f},{c['ci90'][1]:+.3f}] p_better {c['p_a_better']:.2f}", flush=True)

@@ -1,0 +1,48 @@
+model.cnn_probs vs infer_pair.cnn_probs 비트 동일: True 최대차 0.0
+test.py 저장 p_cnn 과 동일: True
+test.py: /home/ubuntu/jaehyeok/DataTon/test.py
+입력: /home/ubuntu/data/battery_data_light/test/test.csv
+작업 폴더: /home/ubuntu/jaehyeok/cache/final/self_check_halves
+  - 실행 [base] 3451행, 11.8s
+[PASS] (1) 출력 형식/순서 + 최종 파일 재현: 3451행, 라벨 분포 {1: 1367, 2: 398, 3: 982, 4: 266, 5: 302, 6: 136}
+  - 실행 [rerun] 3451행, 11.8s
+[PASS] (2) 같은 입력 재실행: 불일치 0/3451
+  - 실행 [shuffled] 3451행, 11.5s
+[PASS] (3) 행 순서 섞기: 불일치 0/3451, 출력이 (섞인) 입력 순서를 따름=True
+  - 실행 [split0] 1559행, 6.6s
+  - 실행 [split1] 1892행, 7.9s
+[PASS] (4) 실험 나눠 넣기 (halves, 2회): 불일치 0/3451
+  - 실행 [first60] 2069행, 8.4s
+[PASS] (5) 미래 행 빼기 (실험별 앞 60%): 불일치 0/2069
+  - 실행 [imgswap] 3451행, 12.2s
+  - 실행 [imgswap_within] 3451행, 12.0s
+[PASS] (6) 이미지 바꾸기: 예측 변경 비율 1.9% (전체 무작위 교체) / 2.1% (같은 실험 안에서만 교체, 참고)
+
+요약
+  (1) PASS  출력 형식/순서 + 최종 파일 재현: 3451행, 라벨 분포 {1: 1367, 2: 398, 3: 982, 4: 266, 5: 302, 6: 136}
+  (2) PASS  같은 입력 재실행: 불일치 0/3451
+  (3) PASS  행 순서 섞기: 불일치 0/3451, 출력이 (섞인) 입력 순서를 따름=True
+  (4) PASS  실험 나눠 넣기 (halves, 2회): 불일치 0/3451
+  (5) PASS  미래 행 빼기 (실험별 앞 60%): 불일치 0/2069
+  (6) PASS  이미지 바꾸기: 예측 변경 비율 1.9% (전체 무작위 교체) / 2.1% (같은 실험 안에서만 교체, 참고)
+test.py 실행 8회, 임시 파일: /home/ubuntu/jaehyeok/cache/final/self_check_halves
+test.py: /home/ubuntu/jaehyeok/DataTon/test.py
+입력: /home/ubuntu/data/battery_data_light/test/test.csv
+작업 폴더: /home/ubuntu/jaehyeok/cache/final/self_check_each
+  - 실행 [base] 3451행, 11.4s
+  - 실행 [split0] 237행, 3.9s
+  - 실행 [split1] 325행, 4.1s
+  - 실행 [split2] 229행, 3.9s
+  - 실행 [split3] 295행, 4.4s
+  - 실행 [split4] 270행, 3.5s
+  - 실행 [split5] 500행, 4.7s
+  - 실행 [split6] 295행, 4.4s
+  - 실행 [split7] 272행, 4.0s
+  - 실행 [split8] 306행, 4.1s
+  - 실행 [split9] 500행, 5.0s
+  - 실행 [split10] 222행, 4.0s
+[PASS] (4) 실험 나눠 넣기 (each, 11회): 불일치 0/3451
+
+요약
+  (4) PASS  실험 나눠 넣기 (each, 11회): 불일치 0/3451
+test.py 실행 12회, 임시 파일: /home/ubuntu/jaehyeok/cache/final/self_check_each

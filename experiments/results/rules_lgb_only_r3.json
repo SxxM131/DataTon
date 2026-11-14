@@ -1,0 +1,101 @@
+{
+ "name": "rules_lgb_only_r3",
+ "cv": 0.9010918054582476,
+ "cv_per_rep": [
+  0.8966,
+  0.9029,
+  0.9037
+ ],
+ "per_class": [
+  0.9999,
+  0.8151,
+  0.9018,
+  0.8844,
+  0.9024,
+  0.9029
+ ],
+ "origin_train": 0.9019114898956185,
+ "origin_val": 0.8984309154173739,
+ "long_exps": 0.8000187473071568,
+ "short_exps": 0.9075164634177585,
+ "bat1": 0.9016995710523737,
+ "bat2": 0.8134973362695366,
+ "bat3": 0.8924088389745721,
+ "boot_ci90": [
+  0.8790362655879296,
+  0.9192496940188899
+ ],
+ "test11_mean": 0.9002612366649415,
+ "test11_sd": 0.03411891784792248,
+ "test11_q05_q95": [
+  0.8373611204053176,
+  0.9468273756814083
+ ],
+ "public_minus_private_sd": 0.014367979980621018,
+ "cmp_tab_all_nocum_r3": {
+  "diff": -0.0028717026002984536,
+  "ci90": [
+   -0.0150561387876882,
+   0.008376144125398152
+  ],
+  "p_a_better": 0.3535,
+  "repeats": [
+   "pred_r0",
+   "pred_r1",
+   "pred_r2"
+  ]
+ },
+ "cmp_tab_all_pool": {
+  "diff": 0.0013262190368411586,
+  "ci90": [
+   -0.012827158176878399,
+   0.013443678950622772
+  ],
+  "p_a_better": 0.59325,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "cmp_ref_gbdt_color_extra": {
+  "diff": 0.014818725599291316,
+  "ci90": [
+   -0.00042795732567575364,
+   0.03164265589384299
+  ],
+  "p_a_better": 0.9445,
+  "repeats": [
+   "pred_r0",
+   "pred_r1",
+   "pred_r2"
+  ]
+ },
+ "args": {
+  "name": "rules_lgb_only_r3",
+  "mode": "rules_lgb",
+  "cfg": "{}",
+  "lgb": "{\"learning_rate\":0.1,\"n_estimators\":200,\"colsample_bytree\":0.3,\"max_bin\":63}",
+  "n_repeats": 3,
+  "drop_rules": "",
+  "compare": "tab_all_nocum_r3,tab_all_pool,ref_gbdt_color_extra"
+ },
+ "cfg": {
+  "extra": true
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.1,
+  "n_estimators": 200,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 1.0,
+  "n_jobs": 4,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ },
+ "n_feat": 34
+}

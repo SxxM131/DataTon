@@ -109,3 +109,15 @@ def cmp(evalp, a, b, la='A', lb='B'):
     c = cv.compare(evalp, a, b)
     print(f"    {la} vs {lb}: diff {c['diff']:+.4f} ci90 [{c['ci90'][0]:+.3f},{c['ci90'][1]:+.3f}] p_better {c['p_a_better']:.3f}", flush=True)
     return c
+
+
+def onset_rows(evalp):
+    """evalp(Test-like) 문맥에서 각 실험의 단계 4/5/6 첫 행 (evalp 행 위치)."""
+    out = {4: [], 5: [], 6: []}
+    t = evalp.relative_time_s.to_numpy(); lab = evalp.label.to_numpy()
+    for _, idx in evalp.groupby('experiment_id', sort=False).indices.items():
+        idx = idx[np.argsort(t[idx], kind='mergesort')]
+        for s in out:
+            if (lab[idx] == s).any():
+                out[s].append(idx[np.argmax(lab[idx] == s)])
+    return {s: np.array(v) for s, v in out.items()}
