@@ -12,8 +12,10 @@
   9. 2·3단계 재판정: 8의 결과가 2 또는 3인 행만, 재판정 모델(테이블 단독)의 p2·p3 중 큰 쪽으로 다시 정한다.
      나머지 단계(1, 4, 5, 6)의 예측은 건드리지 않는다.
      (2·3단계 경계는 열화상에 보이지 않아 이미지 확률을 섞지 않는다 — 검증에서도 섞지 않는 쪽이 같거나 나았다.)
- 10. 5단계 근거 확인: 각형 28Ah 가열·각형 280Ah 과충전 실험에서 5단계로 나온 행은, 전압 급락 이후 온도 급상승이
-     한 번이라도 관측된 뒤에만 인정한다 (아니면 4단계). 모델이 '시간이 지났다'는 이유만으로 5단계로 넘기는 것을 막는다.
+ 10. 5단계 근거 확인: 5단계로 나온 행은 그 구성의 5단계 이벤트가 한 번이라도 관측된 뒤에만 인정한다 (아니면 4단계).
+     - 각형 28Ah 가열·각형 280Ah 과충전: 전압 급락 이후 온도 급상승
+     - 원통형 4.8Ah·6Ah 가열: 첫 전압 급락 이후 두 번째 전압 강하
+     모델이 '시간이 지났다'는 이유만으로 5단계로 넘기는 것을 막는다.
 
 모든 시계열 피처는 입력 frame에 있는 행만, 실험별로 relative_time_s 정렬 후 현재 이하 시각의 관측만 사용한다.
 추론 대상 실험의 전체 통계·미래 관측·다른 실험 관측을 쓰지 않는다.
@@ -713,16 +715,65 @@ def surge_seen(frame: pd.DataFrame) -> np.ndarray:
     return out
 
 
-def gate_stage5(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
-    """SURGE_CFGS 구성에서 5단계 예측인데 온도 급상승이 아직 관측되지 않은 행을 4단계로 되돌린다. 다른 행은 그대로."""
-    out = np.asarray(pred).copy()
+# 원통형(4.8Ah·6Ah 가열): 가이드상 5단계 = '4단계 이후 15초 안에 전압이 25% 이상 다시 떨어진 지점(하강 완료점)'.
+#   학습 실험 31개 중 29개에서 아래 조건은 5단계 시작 행 또는 그 이전에 처음 참이 된다 (나머지 2개는 +1행, +2행 이상).
+#   4단계 구간을 5배로 늘린 합성 검증: 조건 없이 4단계 행 1,077개를 5단계로 예측 → 조건을 넣으면 308개 (Macro F1 0.825 → 0.895).
+#   공통 검증에서는 +0.0004 (바뀐 5행이 모두 정답).
+VDD_CFGS = ((1, 4.8, 1), (1, 6.0, 1))          # (bat_class, bat_cc, tr_method)
+VDD_THETA = 0.25                               # 직전 15초 최고 전압 대비 하강 비율
+VDD_WINDOW_S = 15.0
+VDD_LOW_V = 0.5                                # 첫 급락에서 이미 이 값 아래로 내려가면 '두 번째 강하'를 볼 수 없다 → 근거 있음으로 둔다
+
+
+def second_drop_seen(frame: pd.DataFrame) -> np.ndarray:
+    """첫 전압 급락 이후 두 번째 전압 강하를 관측한 적이 있는가 (frame 행 위치 순서, bool).
+
+    두 번째 강하 = 현재 전압 ≤ (1 − VDD_THETA) × (직전 15초 동안, 첫 급락 이후 관측 중 최고 전압).
+    첫 급락 이후 전압이 VDD_LOW_V 미만이면 그 시점부터 참으로 둔다. 실험별 시간순, 현재 이하 관측만 사용.
+    """
+    n = len(frame)
+    out = np.zeros(n, dtype=bool)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
+    t_all, v_all = num('relative_time_s'), num('meas_v')
+    for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        t, v = t_all[idx], v_all[idx]
+        with np.errstate(invalid='ignore'):
+            dv = np.r_[0.0, np.diff(v)]
+            ev = (np.nan_to_num(dv, nan=0.0) <= V_DROP) | (np.nan_to_num(v, nan=np.inf) < V_LOW)
+        if not ev.any():
+            continue
+        ivd = int(np.argmax(ev))
+        m = len(t)
+        lo = np.maximum(np.searchsorted(t, t - VDD_WINDOW_S, side='left'), ivd)
+        hit = np.zeros(m, dtype=bool)
+        for k in range(ivd + 1, m):
+            if lo[k] < k:
+                ref = np.fmax.reduce(v[lo[k]:k])            # NaN은 건너뜀
+                hit[k] = bool(v[k] <= (1.0 - VDD_THETA) * ref)
+        hit |= (np.arange(m) >= ivd) & (np.nan_to_num(v, nan=np.inf) < VDD_LOW_V)
+        out[idx] = np.maximum.accumulate(hit)
+    return out
+
+
+def _cfg_mask(frame: pd.DataFrame, cfgs) -> np.ndarray:
     num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
     bc, cc, tm = num('bat_class'), num('bat_cc'), num('tr_method')
-    target = np.zeros(len(frame), dtype=bool)
-    for a, b, c in SURGE_CFGS:
-        target |= (bc == a) & (cc == b) & (tm == c)
-    if target.any():
-        out[target & (out == 5) & ~surge_seen(frame)] = 4
+    mask = np.zeros(len(frame), dtype=bool)
+    for a, b, c in cfgs:
+        mask |= (bc == a) & (cc == b) & (tm == c)
+    return mask
+
+
+def gate_stage5(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
+    """5단계 예측인데 그 구성의 5단계 이벤트(온도 급상승 / 두 번째 전압 강하)가 아직 관측되지 않은 행을 4단계로 되돌린다."""
+    out = np.asarray(pred).copy()
+    for cfgs, seen_fn in ((SURGE_CFGS, surge_seen), (VDD_CFGS, second_drop_seen)):
+        target = _cfg_mask(frame, cfgs)
+        if target.any():
+            out[target & (out == 5) & ~seen_fn(frame)] = 4
     return out
 
 

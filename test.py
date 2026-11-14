@@ -14,7 +14,8 @@
   4. pairdiff CNN(weights/cnn_pairdiff.pt): 현재 + 같은 실험의 직전 관측 프레임 + 차이 → P_cnn (1장씩, 결정적 설정)
   5. P ∝ P_tab^0.8 · P_cnn^0.2 → label = argmax + 1 (1~6 정수)
   6. label이 2 또는 3인 행만 P_tab23 의 p2·p3 중 큰 쪽으로 다시 정한다 (다른 단계는 그대로, 이미지 확률은 섞지 않음).
-  7. 각형 28Ah 가열·각형 280Ah 과충전 실험에서 label이 5인데 전압 급락 이후 온도 급상승이 아직 관측되지 않았으면 4로 되돌린다.
+  7. label이 5인데 그 구성의 5단계 이벤트가 아직 관측되지 않았으면 4로 되돌린다
+     (각형 28Ah 가열·각형 280Ah 과충전: 전압 급락 이후 온도 급상승 / 원통형: 두 번째 전압 강하).
      입력 CSV 행 순서로 저장 (index=False)
 입력 행만으로 계산하므로 행 순서를 섞거나, 실험 일부만 넣거나, 실험별 앞부분만 넣어도 같은 행에는 같은 예측이 나온다.
 """
@@ -71,7 +72,7 @@ def main():
     # --- 후기 융합 ---
     p = M.fuse(p_tab, p_cnn, bundle['fuse_w'])
     label = M.redecide_23(M.to_label(p), p_tab23)           # 2·3단계만 재판정 (테이블 단독 확률)
-    label = M.gate_stage5(label, frame)                     # 온도 급상승 근거 없는 5단계 → 4단계
+    label = M.gate_stage5(label, frame)                     # 5단계 이벤트 근거 없는 5단계 → 4단계
     pred = pd.Series(label, index=frame.sample_id.values)
 
     if args.sample_submission is not None:
