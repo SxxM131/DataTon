@@ -92,7 +92,7 @@ def main():
     t_build = time.time() - tb
     if args.drop:
         dr = [d for d in args.drop.split(',') if d]
-        keep = [c for c in Xp.columns if not any(c == d or c.startswith(d) for d in dr)]
+        keep = [c for c in Xp.columns if not any(c == d or c.startswith(d) or (d.startswith('*') and d[1:] in c) for d in dr)]
         Xp, Xe = Xp[keep], Xe[keep]
     cols = list(Xp.columns)
     # 증강 세트: (피처, 라벨, 실험ID)

@@ -66,8 +66,9 @@ for kind in ('rgb', 'pt'):
             m = L.lgbm().fit(np.hstack([Xs_fit[tr], p.transform(A_fit[tr])]), y[tr])
             return m.predict(np.hstack([Xs_eval[va], p.transform(A_eval[va])]))
 
-        _, oofs[tagn + '_lr'] = L.run_cv(tagn + '_lr', pool, evalp, lr_only)
-        _, oofs[tagn + '_gbdt_fused'] = L.run_cv(tagn + '_pca16_sensor_gbdt', pool, evalp, fused)
+        _, oofs[tagn + '_lr'] = L.run_cv(tagn + '_lr', pool, evalp, lr_only, official=False)
+        if '--fused' in sys.argv and temporal:          # GBDT 결합은 CPU 비용이 커서 옵션
+            _, oofs[tagn + '_gbdt_fused'] = L.run_cv(tagn + '_pca16_sensor_gbdt', pool, evalp, fused, official=False)
 import os
 p = L.HERE.parent / 'results/oof/img_tab_sensor_color.pkl'
 if p.exists():

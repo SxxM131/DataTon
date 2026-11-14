@@ -31,6 +31,7 @@ DEFAULT = dict(
     cum=True,                       # 누적 max/min, 첫 관측 대비, 최고점 이후 경과 시간
     thresh=True,                    # 임계값 최초 도달 이후 경과 시간 (t1>=45 등)
     img=True,                       # 이미지 색 통계 + 이미지 신호 시계열
+    rule=False,                     # 규칙형 피처: t1 누적최댓값 >=45/50 여부, 45/50 도달 후 경과초, t1-50
     extra=False,                    # 가스 10종 + atmp_t/thermal_t/indu_t + 메타 4개
 )
 
@@ -143,6 +144,18 @@ def build(frame: pd.DataFrame, color: pd.DataFrame | None, cfg: dict | None = No
         for fr in (0.9, 0.5, 0.1):
             out[f'since_v_{fr}'] = _since(g, t, v < fr * vmax)
         out['since_v_zero'] = _since(g, t, v < 0.05)
+
+    # --- 규칙형 피처 (2단계 시작 = t1이 처음 45 이상, 3단계는 t1>=50 이후에만 시작한다는 관찰) ---
+    if cfg['rule']:
+        t1 = df['meas_t1'].to_numpy()
+        t1max = pd.Series(t1).groupby(g).cummax().to_numpy()
+        out['t1_cummax'] = t1max
+        for th in (45, 50):
+            out[f'rule_t1max_ge{th}'] = (t1max >= th).astype(float)
+            out[f'rule_t1_ge{th}'] = (t1 >= th).astype(float)
+            out[f'rule_since_t1_{th}'] = _since(g, t, t1 >= th)
+        out['rule_t1_m50'] = t1 - 50.0
+        out['rule_t1max_m50'] = t1max - 50.0
 
     res = pd.DataFrame(out)
     res.index = frame.index[order]

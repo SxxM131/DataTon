@@ -1,0 +1,44 @@
+base=ref 센서 피처 44개, CNN tag=temporal
+img_cnn_temporal_only              CV 0.7483 [0.715,0.779] | train-origin 0.748 val-origin 0.756 | long 0.650 short 0.745 | bat1/2/3 0.659/0.673/0.783 | per-class [0.961, 0.632, 0.762, 0.62, 0.738, 0.777] | official-val 0.7252
+img_base_ref                       CV 0.8813 [0.852,0.905] | train-origin 0.892 val-origin 0.840 | long 0.724 short 0.897 | bat1/2/3 0.887/0.807/0.857 | per-class [0.999, 0.805, 0.896, 0.862, 0.868, 0.858]
+    2→3 오분류 828, 3→2 960, 4↔5 345
+img_cnn_temporal_agg_only          CV 0.7426 [0.712,0.769] | train-origin 0.747 val-origin 0.730 | long 0.616 short 0.742 | bat1/2/3 0.660/0.652/0.744 | per-class [0.951, 0.581, 0.778, 0.643, 0.722, 0.779]
+    vs ref_gbdt_color_extra: diff -0.1372 ci90 [-0.163,-0.115] p_better 0.000
+    img_cnn_temporal_agg_only vs img_base_ref: diff -0.1387 ci90 [-0.164,-0.116] p_better 0.000
+    2→3 오분류 1413, 3→2 1184, 4↔5 301
+img_stack_ref_temporal_probs       CV 0.8758 [0.843,0.902] | train-origin 0.887 val-origin 0.835 | long 0.708 short 0.892 | bat1/2/3 0.891/0.796/0.846 | per-class [0.999, 0.789, 0.889, 0.857, 0.862, 0.858]
+    vs ref_gbdt_color_extra: diff -0.0040 ci90 [-0.010,+0.002] p_better 0.143
+    img_stack_ref_temporal_probs vs img_base_ref: diff -0.0055 ci90 [-0.011,-0.000] p_better 0.038
+    2→3 오분류 932, 3→2 998, 4↔5 363
+    이미지 바꾸기: 예측이 달라진 비율 0.048 | 바꾼 뒤 macroF1 0.8551
+base=ref 센서 피처 44개, CNN tag=single
+img_cnn_single_only                CV 0.7866 [0.757,0.811] | train-origin 0.797 val-origin 0.747 | long 0.696 short 0.784 | bat1/2/3 0.723/0.698/0.805 | per-class [0.967, 0.702, 0.811, 0.696, 0.754, 0.79] | official-val 0.7392
+img_base_ref                       CV 0.8813 [0.852,0.905] | train-origin 0.892 val-origin 0.840 | long 0.724 short 0.897 | bat1/2/3 0.887/0.807/0.857 | per-class [0.999, 0.805, 0.896, 0.862, 0.868, 0.858]
+    2→3 오분류 828, 3→2 960, 4↔5 345
+img_cnn_single_agg_only            CV 0.7598 [0.729,0.785] | train-origin 0.762 val-origin 0.754 | long 0.621 short 0.779 | bat1/2/3 0.706/0.670/0.738 | per-class [0.964, 0.588, 0.793, 0.679, 0.744, 0.791]
+    vs ref_gbdt_color_extra: diff -0.1200 ci90 [-0.145,-0.098] p_better 0.000
+    img_cnn_single_agg_only vs img_base_ref: diff -0.1216 ci90 [-0.146,-0.099] p_better 0.000
+    2→3 오분류 1660, 3→2 1020, 4↔5 314
+img_stack_ref_single_probs         CV 0.8788 [0.846,0.905] | train-origin 0.896 val-origin 0.817 | long 0.710 short 0.898 | bat1/2/3 0.893/0.797/0.850 | per-class [0.999, 0.807, 0.897, 0.856, 0.858, 0.857]
+    vs ref_gbdt_color_extra: diff -0.0010 ci90 [-0.008,+0.006] p_better 0.405
+    img_stack_ref_single_probs vs img_base_ref: diff -0.0025 ci90 [-0.011,+0.005] p_better 0.319
+    2→3 오분류 819, 3→2 958, 4↔5 380
+    이미지 바꾸기: 예측이 달라진 비율 0.056 | 바꾼 뒤 macroF1 0.8464
+img_stack_ref_single_agg           CV 0.8648 [0.831,0.894] | train-origin 0.883 val-origin 0.799 | long 0.693 short 0.887 | bat1/2/3 0.885/0.781/0.831 | per-class [1.0, 0.765, 0.882, 0.846, 0.843, 0.853]
+    vs ref_gbdt_color_extra: diff -0.0150 ci90 [-0.031,-0.001] p_better 0.040
+    img_stack_ref_single_agg vs img_base_ref: diff -0.0165 ci90 [-0.033,-0.002] p_better 0.033
+    2→3 오분류 1142, 3→2 946, 4↔5 428
+    이미지 바꾸기: 예측이 달라진 비율 0.146 | 바꾼 뒤 macroF1 0.6718
+base=ref 센서 피처 44개, CNN tag=temporal_pt
+img_cnn_temporal_pt_only           CV 0.7773 [0.746,0.805] | train-origin 0.785 val-origin 0.749 | long 0.681 short 0.766 | bat1/2/3 0.701/0.682/0.797 | per-class [0.96, 0.672, 0.788, 0.662, 0.774, 0.807] | official-val 0.7494
+img_base_ref                       CV 0.8813 [0.852,0.905] | train-origin 0.892 val-origin 0.840 | long 0.724 short 0.897 | bat1/2/3 0.887/0.807/0.857 | per-class [0.999, 0.805, 0.896, 0.862, 0.868, 0.858]
+    2→3 오분류 828, 3→2 960, 4↔5 345
+img_cnn_temporal_pt_agg_only       CV 0.7591 [0.725,0.788] | train-origin 0.768 val-origin 0.723 | long 0.627 short 0.758 | bat1/2/3 0.704/0.633/0.765 | per-class [0.959, 0.588, 0.781, 0.688, 0.748, 0.791]
+    vs ref_gbdt_color_extra: diff -0.1207 ci90 [-0.146,-0.098] p_better 0.000
+    img_cnn_temporal_pt_agg_only vs img_base_ref: diff -0.1222 ci90 [-0.149,-0.099] p_better 0.000
+    2→3 오분류 1485, 3→2 1194, 4↔5 193
+img_stack_ref_temporal_pt_probs    CV 0.8741 [0.840,0.901] | train-origin 0.888 val-origin 0.823 | long 0.718 short 0.889 | bat1/2/3 0.883/0.797/0.847 | per-class [0.999, 0.798, 0.892, 0.859, 0.851, 0.846]
+    vs ref_gbdt_color_extra: diff -0.0057 ci90 [-0.013,+0.001] p_better 0.090
+    img_stack_ref_temporal_pt_probs vs img_base_ref: diff -0.0073 ci90 [-0.015,+0.000] p_better 0.056
+    2→3 오분류 852, 3→2 1017, 4↔5 370
+    이미지 바꾸기: 예측이 달라진 비율 0.045 | 바꾼 뒤 macroF1 0.8494

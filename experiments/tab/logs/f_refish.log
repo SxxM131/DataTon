@@ -1,0 +1,4 @@
+[f_refish] 피처 78개, pool 43722 / evalp 31784, 증강 0행, 준비 0.3s, 11실험 피처생성 13ms
+f_refish                           CV 0.8775 [0.848,0.901] | train-origin 0.889 val-origin 0.834 | long 0.713 short 0.893 | bat1/2/3 0.885/0.804/0.856 | per-class [0.996, 0.792, 0.895, 0.858, 0.867, 0.858]
+  test11 0.880±0.042 | vs ref diff -0.0023 CI90 [-0.008,+0.003] p_better 0.22 | 17s
+  top feats: meas_t1_mean30s:0.176, meas_t1:0.135, meas_t1_max30s:0.099, meas_v:0.067, meas_v_mean30s:0.053, meas_t2_max30s:0.042, meas_v_max30s:0.041, pt_frac50:0.029, meas_t1_r30s:0.023, pt_frac20:0.020, pt_frac50_mean30s:0.019, pt_std:0.017, indu_t_mean30s:0.015, thermal_t:0.015, meas_t2_mean30s:0.015

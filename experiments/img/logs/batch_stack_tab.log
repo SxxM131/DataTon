@@ -1,0 +1,10 @@
+base=tab 센서 피처 323개, CNN tag=temporal
+img_cnn_temporal_only              CV 0.7483 [0.715,0.779] | train-origin 0.748 val-origin 0.756 | long 0.650 short 0.745 | bat1/2/3 0.659/0.673/0.783 | per-class [0.961, 0.632, 0.762, 0.62, 0.738, 0.777] | official-val 0.7252
+img_base_tab                       CV 0.8958 [0.874,0.914] | train-origin 0.899 val-origin 0.883 | long 0.817 short 0.899 | bat1/2/3 0.902/0.792/0.897 | per-class [1.0, 0.767, 0.885, 0.911, 0.92, 0.891]
+    vs ref_gbdt_color_extra: diff +0.0160 ci90 [+0.001,+0.035] p_better 0.958
+    2→3 오분류 1112, 3→2 976, 4↔5 182
+img_stack_tab_temporal_probs       CV 0.8946 [0.872,0.913] | train-origin 0.898 val-origin 0.880 | long 0.809 short 0.899 | bat1/2/3 0.901/0.794/0.895 | per-class [1.0, 0.766, 0.884, 0.909, 0.918, 0.891]
+    vs ref_gbdt_color_extra: diff +0.0148 ci90 [+0.001,+0.031] p_better 0.960
+    img_stack_tab_temporal_probs vs img_base_tab: diff -0.0012 ci90 [-0.005,+0.002] p_better 0.311
+    2→3 오분류 1106, 3→2 1004, 4↔5 190
+    이미지 바꾸기: 예측이 달라진 비율 0.018 | 바꾼 뒤 macroF1 0.8912

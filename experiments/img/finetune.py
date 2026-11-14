@@ -36,8 +36,10 @@ ap.add_argument('--epoch_size', type=int, default=24000)
 ap.add_argument('--bs', type=int, default=128)
 ap.add_argument('--lr', type=float, default=5e-4)
 ap.add_argument('--S', type=int, default=128)
+ap.add_argument('--input', default='rgb', help='rgb | pt(의사온도 1채널)')
 ap.add_argument('--no_pairs', action='store_true')
 ap.add_argument('--smoke', action='store_true')
+ap.add_argument('--full', action='store_true', help='97개 실험 전체로 최종 모델 1개 학습 → cnn_{tag}_full.pt (fp16 state_dict)')
 args = ap.parse_args()
 tag = args.tag or args.mode
 dev = 'cuda'
@@ -48,11 +50,15 @@ y = torch.tensor(pool.label.to_numpy() - 1, device=dev)
 is_eval = np.zeros(N, bool); is_eval[pool.index.get_indexer(evalp.index)] = True
 ctx_pool = L.context_index(pool, np.ones(N, bool), lags=(30, 35, 40))
 ctx_eval = L.context_index(pool, is_eval, lags=(30,))
-X = torch.from_numpy(np.load(L.ICACHE / f'pool_rgb{args.S}.npy')).to(dev)          # (N,S,S,3) uint8
+X = torch.from_numpy(np.load(L.ICACHE / f'pool_{args.input}{args.S}.npy')).to(dev)          # (N,S,S,3) uint8 (pt는 (N,S,S))
+if args.input == 'pt':
+    X = X[..., None]
+PT = args.input == 'pt'
 assert (np.load(L.ICACHE / 'pool_ids.npy') == pool.sample_id.to_numpy().astype(str)).all()
-C = {'single': 3, 'temporal': 9}[args.mode]
-MEAN = torch.tensor([0.485, 0.456, 0.406] * (C // 3), device=dev).view(1, C, 1, 1)
-STD = torch.tensor([0.229, 0.224, 0.225] * (C // 3), device=dev).view(1, C, 1, 1)
+TEMP = args.mode == 'temporal'
+C = (3 if TEMP else 1) * (1 if PT else 3)
+MEAN = torch.tensor(([0.3] if PT else [0.485, 0.456, 0.406]) * (3 if TEMP else 1), device=dev).view(1, C, 1, 1)
+STD = torch.tensor(([0.3] if PT else [0.229, 0.224, 0.225]) * (3 if TEMP else 1), device=dev).view(1, C, 1, 1)
 T = lambda a: torch.as_tensor(a, device=dev)
 P_first, P_lags = T(ctx_pool['first']), torch.stack([T(ctx_pool[f'lag{w}']) for w in (30, 35, 40)])
 E_first, E_lag = T(ctx_eval['first']), T(ctx_eval['lag30'])
@@ -67,7 +73,7 @@ base_w = np.minimum(1.0, cv.CAP / n_exp)                       # 긴 실험이 �
 
 def batch(idx, ctx, train):
     """idx: pool 행 위치 텐서. ctx='pool'|'eval'."""
-    if C == 3:
+    if not TEMP:
         x = X[idx]
     else:
         if ctx == 'pool':
@@ -128,7 +134,7 @@ def run(name, hold_mask, seed):
     m = train_model(~hold_mask, seed)
     rows = np.where(hold_mask)[0]
     pp = predict(m, rows, 'pool')
-    pe = predict(m, rows[is_eval[rows]], 'eval') if C == 9 else np.where(is_eval[:, None], pp, np.nan)
+    pe = predict(m, rows[is_eval[rows]], 'eval') if TEMP else np.where(is_eval[:, None], pp, np.nan)
     ev = hold_mask & is_eval
     f1 = cv.macro_f1(pool.label.to_numpy()[ev], pe[ev].argmax(1) + 1)
     print(f'{name}: held-out evalp rows {ev.sum()} image-only macroF1 {f1:.4f} ({time.time() - t0:.0f}s)', flush=True)
@@ -139,6 +145,11 @@ res = {}
 if args.smoke:
     args.epochs = 1
     run('smoke', fold_of == 0, 0); raise SystemExit
+if args.full:
+    t0 = time.time()
+    m = train_model(np.ones(N, bool), 999)
+    torch.save({n: v.half() for n, v in m.state_dict().items()}, L.ICACHE / f'cnn_{tag}_full.pt')
+    print(f'full: 전체 {N}행 학습 완료 ({time.time() - t0:.0f}s) → cnn_{tag}_full.pt', flush=True); raise SystemExit
 for k in range(5):
     pp, pe, m = run(f'out{k}', fold_of == k, 100 + k)
     res[f'out{k}_pool'], res[f'out{k}_eval'] = pp, pe

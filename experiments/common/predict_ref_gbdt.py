@@ -19,8 +19,9 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--data_dir', type=Path, required=True)
 ap.add_argument('--cache_dir', type=Path, required=True)
 ap.add_argument('--output', type=Path, required=True)
+ap.add_argument('--groups', default='color,extra')
 args = ap.parse_args()
-groups = ['color', 'extra']
+groups = [g for g in args.groups.split(',') if g]
 pool = cv.load_pool(args.data_dir)
 color = pd.concat([pd.read_pickle(args.cache_dir / f'{s}_color.pkl') for s in ('train', 'validation')])
 test = pd.read_csv(args.data_dir / 'test' / 'test.csv', dtype={'sample_id': 'string', 'experiment_id': 'string'})

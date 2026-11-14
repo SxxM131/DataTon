@@ -20,7 +20,7 @@ DATA = Path.home() / 'data/battery_data_light'
 CACHE = Path.home() / 'jaehyeok/cache'
 ICACHE = CACHE / 'img'
 REF_OOF = HERE.parent / 'results/oof/ref_gbdt_color_extra.pkl'
-NT = 4
+NT = int(os.environ.get('NT', 4))
 
 
 def load_all():

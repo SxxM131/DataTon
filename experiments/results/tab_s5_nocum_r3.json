@@ -1,0 +1,83 @@
+{
+ "name": "tab_s5_nocum_r3",
+ "cv": 0.8981128229879657,
+ "cv_per_rep": [
+  0.8983,
+  0.8987,
+  0.8973
+ ],
+ "per_class": [
+  0.9999,
+  0.8011,
+  0.897,
+  0.8966,
+  0.9118,
+  0.8823
+ ],
+ "origin_train": 0.9004102952131908,
+ "origin_val": 0.8897552102001934,
+ "long_exps": 0.8168841485142768,
+ "short_exps": 0.9026994047447765,
+ "bat1": 0.9029238495077127,
+ "bat2": 0.7980736050920859,
+ "bat3": 0.900529427324447,
+ "boot_ci90": [
+  0.877809999462818,
+  0.914731835843793
+ ],
+ "test11_mean": 0.9002516515987675,
+ "test11_sd": 0.030864889738702186,
+ "test11_q05_q95": [
+  0.8446298087558739,
+  0.9437005404453235
+ ],
+ "public_minus_private_sd": 0.01448800868946932,
+ "official_val": 0.8834161766236673,
+ "cmp_ref": {
+  "diff": 0.01182595357360161,
+  "ci90": [
+   -0.002741026567321686,
+   0.030015360427667167
+  ],
+  "p_a_better": 0.877,
+  "repeats": [
+   "pred_r0",
+   "pred_r1",
+   "pred_r2"
+  ]
+ },
+ "n_feat": 168,
+ "build_ms_11exp": 31.76259994506836,
+ "args": {
+  "name": "tab_s5_nocum_r3",
+  "feat": "sensor5",
+  "cfg": "{\"cum\":false}",
+  "train_rows": "pool",
+  "weight": "none",
+  "lgb": "{\"learning_rate\":0.1,\"n_estimators\":200,\"colsample_bytree\":0.3,\"max_bin\":63}",
+  "seeds": 1,
+  "n_repeats": 3,
+  "drop": "",
+  "no_official": false
+ },
+ "cfg": {
+  "extra": false,
+  "cum": false
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.1,
+  "n_estimators": 200,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 1.0,
+  "n_jobs": 6,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ }
+}

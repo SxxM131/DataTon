@@ -1,0 +1,79 @@
+{
+ "name": "f_all_nocum_nothresh",
+ "cv": 0.8995164576223694,
+ "cv_per_rep": [
+  0.8995
+ ],
+ "per_class": [
+  0.9974,
+  0.7889,
+  0.8937,
+  0.9064,
+  0.9234,
+  0.8872
+ ],
+ "origin_train": 0.9004145927038341,
+ "origin_val": 0.8949466407875746,
+ "long_exps": 0.8257030305878758,
+ "short_exps": 0.9041816835147657,
+ "bat1": 0.8982499055639707,
+ "bat2": 0.810091511378454,
+ "bat3": 0.8996386304162088,
+ "boot_ci90": [
+  0.8788917901702646,
+  0.9163866334868757
+ ],
+ "test11_mean": 0.8998360588522187,
+ "test11_sd": 0.03156359135398634,
+ "test11_q05_q95": [
+  0.8433158746744404,
+  0.9432807409567479
+ ],
+ "public_minus_private_sd": 0.014036745866387614,
+ "cmp_ref": {
+  "diff": 0.019710284516867294,
+  "ci90": [
+   0.005084163984345913,
+   0.03910611498468847
+  ],
+  "p_a_better": 0.998,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "n_feat": 254,
+ "build_ms_11exp": 30.877113342285156,
+ "args": {
+  "name": "f_all_nocum_nothresh",
+  "feat": "all",
+  "cfg": "{\"cum\":false,\"thresh\":false}",
+  "train_rows": "pool",
+  "weight": "none",
+  "lgb": "{\"learning_rate\":0.1,\"n_estimators\":200,\"colsample_bytree\":0.3,\"max_bin\":63}",
+  "seeds": 1,
+  "n_repeats": 1,
+  "drop": "",
+  "no_official": true
+ },
+ "cfg": {
+  "extra": true,
+  "cum": false,
+  "thresh": false
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.1,
+  "n_estimators": 200,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 1.0,
+  "n_jobs": 6,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ }
+}

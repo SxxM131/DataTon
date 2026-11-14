@@ -1,0 +1,12 @@
+[f_all] 피처 323개, pool 43722 / evalp 31784, 증강 0행, 준비 0.8s, 11실험 피처생성 44ms
+f_all                              CV 0.8945 [0.872,0.913] | train-origin 0.901 val-origin 0.871 | long 0.788 short 0.903 | bat1/2/3 0.902/0.797/0.888 | per-class [1.0, 0.779, 0.89, 0.901, 0.91, 0.888]
+  test11 0.896±0.035 | vs ref diff +0.0147 CI90 [+0.003,+0.028] p_better 0.99 | 73s
+  top feats: meas_t1_cummax:0.121, since_t1_45:0.099, meas_t1_max30s:0.071, meas_t1_max300s:0.055, meas_t1:0.050, meas_t1_max120s:0.045, meas_v_cummin:0.042, meas_t1_mean120s:0.031, meas_t1_mean30s:0.031, meas_v_min300s:0.028, meas_v_mean120s:0.027, pt_p50:0.023, meas_t1_d0:0.021, meas_v_min30s:0.021, v_ratio_max:0.015
+[f_all_nocum] 피처 266개, pool 43722 / evalp 31784, 증강 0행, 준비 0.6s, 11실험 피처생성 33ms
+f_all_nocum                        CV 0.9000 [0.879,0.918] | train-origin 0.905 val-origin 0.882 | long 0.808 short 0.908 | bat1/2/3 0.905/0.818/0.893 | per-class [1.0, 0.798, 0.894, 0.906, 0.917, 0.885]
+  test11 0.901±0.033 | vs ref diff +0.0202 CI90 [+0.007,+0.037] p_better 1.00 | 23s
+  top feats: meas_t1_max120s:0.132, meas_t1_mean30s:0.104, meas_t1_max300s:0.097, since_t1_45:0.068, meas_t1_max30s:0.046, meas_t1:0.043, meas_v_min300s:0.042, meas_v_mean120s:0.035, meas_v_min120s:0.034, meas_t1_min30s:0.027, meas_v_mean30s:0.024, meas_t1_mean120s:0.023, since_v_0.9:0.018, pt_mean_max30s:0.015, since_v_0.5:0.012
+[f_all_wexp] 피처 323개, pool 43722 / evalp 31784, 증강 0행, 준비 0.8s, 11실험 피처생성 43ms
+f_all_wexp                         CV 0.8926 [0.870,0.911] | train-origin 0.899 val-origin 0.870 | long 0.792 short 0.902 | bat1/2/3 0.902/0.805/0.885 | per-class [1.0, 0.768, 0.884, 0.904, 0.912, 0.886]
+  test11 0.894±0.035 | vs ref diff +0.0128 CI90 [+0.000,+0.027] p_better 0.95 | 21s
+  top feats: meas_t1_cummax:0.109, since_t1_45:0.097, meas_t1_max30s:0.055, meas_t1_max300s:0.049, meas_v_min300s:0.048, meas_t1_max120s:0.048, meas_t1:0.045, meas_v_cummin:0.043, meas_t1_mean30s:0.031, pt_p50:0.027, v_ratio_max:0.026, meas_t1_d0:0.023, v_ratio0:0.019, meas_t1_mean120s:0.016, meas_v_fromcmax:0.016
