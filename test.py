@@ -19,6 +19,7 @@
      (각형 28Ah 가열·각형 280Ah 과충전: 전압 급락 이후 온도 급상승 / 원통형: 두 번째 전압 강하).
   9. 원통형에서는 4단계에 들어선 뒤 30초가 지나기 전의 5단계 이상 판정을 4로 둔다.
  10. 같은 실험의 앞선 시점에 4단계(5단계) 이상으로 판정한 적이 있으면 그 아래로 내려가지 않게 한다 (4단계는 전압 급락을 관측한 뒤부터).
+ 11. 각형에서 label이 5인데 온도 급상승 뒤 온도 합(t1+t2)이 현재의 최고점보다 30℃ 넘게 내려온 적이 있으면 6으로 올린다.
      입력 CSV 행 순서로 저장 (index=False)
 입력 행만으로 계산하므로 행 순서를 섞거나, 실험 일부만 넣거나, 실험별 앞부분만 넣어도 같은 행에는 같은 예측이 나온다.
 """
@@ -74,7 +75,7 @@ def main():
 
     # --- 후기 융합 ---
     p = M.fuse(p_tab, p_cnn, bundle['fuse_w'])
-    label = M.apply_rules(M.to_label(p), p_tab23, frame)    # 2·3단계 재판정 → 6·5단계 근거 확인 → 원통형 4단계 최소 길이 → 되돌아가지 않기
+    label = M.apply_rules(M.to_label(p), p_tab23, frame)    # 2·3 재판정 → 6·5단계 근거 확인 → 원통형 4단계 최소 길이 → 되돌아가지 않기 → 6단계 진입(각형)
     pred = pd.Series(label, index=frame.sample_id.values)
 
     if args.sample_submission is not None:
