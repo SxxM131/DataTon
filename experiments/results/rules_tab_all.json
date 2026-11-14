@@ -1,0 +1,83 @@
+{
+ "name": "rules_tab_all",
+ "cv": 0.8999483703989077,
+ "cv_per_rep": [
+  0.8999
+ ],
+ "per_class": [
+  1.0,
+  0.7682,
+  0.886,
+  0.9187,
+  0.9261,
+  0.9007
+ ],
+ "origin_train": 0.9035170104042868,
+ "origin_val": 0.8851694112074565,
+ "long_exps": 0.8126539267390439,
+ "short_exps": 0.9055371172445364,
+ "bat1": 0.9117192139012252,
+ "bat2": 0.798660916931698,
+ "bat3": 0.8975343084830292,
+ "boot_ci90": [
+  0.8791480256354279,
+  0.9171383809046205
+ ],
+ "test11_mean": 0.9035812311082477,
+ "test11_sd": 0.03302399227808319,
+ "test11_q05_q95": [
+  0.8403307132585427,
+  0.9475691875108793
+ ],
+ "public_minus_private_sd": 0.013676664320965903,
+ "cmp_tab_all_pool": {
+  "diff": 0.004642180732646661,
+  "ci90": [
+   -1.3652954554265984e-05,
+   0.009765027088314737
+  ],
+  "p_a_better": 0.949,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "cmp_ref_gbdt_color_extra": {
+  "diff": 0.020142197293405606,
+  "ci90": [
+   0.005321410965417929,
+   0.03755660539479832
+  ],
+  "p_a_better": 0.9935,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "args": {
+  "name": "rules_tab_all",
+  "mode": "tab+rules",
+  "cfg": "{}",
+  "lgb": "{}",
+  "n_repeats": 1,
+  "drop_rules": "",
+  "compare": "tab_all_pool,ref_gbdt_color_extra"
+ },
+ "cfg": {
+  "extra": true
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.05,
+  "n_estimators": 400,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.5,
+  "reg_lambda": 1.0,
+  "n_jobs": 4,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true
+ },
+ "n_feat": 353
+}

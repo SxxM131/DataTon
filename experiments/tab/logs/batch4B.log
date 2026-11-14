@@ -1,0 +1,12 @@
+[f_all_nocum_slow] 피처 266개, pool 43722 / evalp 31784, 증강 0행, 준비 0.7s, 11실험 피처생성 42ms
+f_all_nocum_slow                   CV 0.8974 [0.876,0.916] | train-origin 0.901 val-origin 0.882 | long 0.804 short 0.905 | bat1/2/3 0.900/0.808/0.893 | per-class [1.0, 0.793, 0.892, 0.903, 0.915, 0.881]
+  test11 0.898±0.034 | vs ref diff +0.0176 CI90 [+0.004,+0.034] p_better 0.99 | 30s
+  top feats: meas_t1_max300s:0.136, meas_t1_max120s:0.114, since_t1_45:0.107, meas_t1_max30s:0.071, meas_t1:0.062, meas_v_min300s:0.059, meas_t1_mean30s:0.058, meas_v_min120s:0.046, meas_v_mean120s:0.026, meas_v_min30s:0.020, meas_v_mean30s:0.020, since_v_0.9:0.014, meas_v:0.014, meas_t1_d300s:0.010, pt_mean_max30s:0.009
+[f_all_nocum_reg] 피처 266개, pool 43722 / evalp 31784, 증강 0행, 준비 0.7s, 11실험 피처생성 40ms
+f_all_nocum_reg                    CV 0.8982 [0.875,0.917] | train-origin 0.904 val-origin 0.875 | long 0.791 short 0.909 | bat1/2/3 0.903/0.809/0.890 | per-class [1.0, 0.797, 0.894, 0.899, 0.912, 0.887]
+  test11 0.898±0.036 | vs ref diff +0.0184 CI90 [+0.007,+0.032] p_better 1.00 | 13s
+  top feats: meas_t1_max120s:0.125, meas_t1_max300s:0.106, meas_t1_mean30s:0.103, since_t1_45:0.065, meas_t1_max30s:0.055, meas_t1:0.051, meas_v_min300s:0.051, meas_v_min120s:0.048, meas_t1_mean120s:0.026, meas_v_mean120s:0.024, meas_v_mean30s:0.021, since_v_0.9:0.018, meas_t1_min30s:0.016, meas_v_min30s:0.016, meas_t1_min120s:0.013
+[f_all_nocum_seed3] 피처 266개, pool 43722 / evalp 31784, 증강 0행, 준비 0.6s, 11실험 피처생성 32ms
+f_all_nocum_seed3                  CV 0.9013 [0.881,0.919] | train-origin 0.904 val-origin 0.888 | long 0.810 short 0.910 | bat1/2/3 0.905/0.814/0.896 | per-class [1.0, 0.8, 0.895, 0.904, 0.921, 0.889]
+  test11 0.903±0.033 | vs ref diff +0.0215 CI90 [+0.008,+0.039] p_better 1.00 | 34s
+  top feats: meas_t1_max30s:0.115, meas_t1_max300s:0.094, since_t1_45:0.085, meas_t1_max120s:0.076, meas_t1:0.070, meas_v_min300s:0.049, meas_v_mean120s:0.040, meas_v_min120s:0.036, meas_t1_min30s:0.030, meas_v_min30s:0.030, meas_t1_min120s:0.026, pt_frac50_mean30s:0.019, meas_t1_mean120s:0.018, meas_t1_d300s:0.018, meas_t1_mean30s:0.015

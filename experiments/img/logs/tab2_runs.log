@@ -1,0 +1,13 @@
+tab_all_nocum_r3 (세션 A OOF)        CV 0.9040 [0.884,0.920] | train-origin 0.906 val-origin 0.895 | long 0.816 short 0.910 | bat1/2/3 0.904/0.819/0.899 | per-class [1.0, 0.816, 0.903, 0.904, 0.917, 0.884] 
+    시작 행 정확도 4/5/6: [0.722, 0.671, 0.552]
+img2_base_nocum                    CV 0.9040 [0.884,0.920] | train-origin 0.906 val-origin 0.895 | long 0.816 short 0.910 | bat1/2/3 0.904/0.819/0.899 | per-class [1.0, 0.816, 0.903, 0.904, 0.917, 0.884]
+    시작 행 정확도 (evalp 문맥 첫 행, 4/5/6: n=[90, 86, 93]): [0.722, 0.671, 0.552]
+    img2_base_nocum vs tab_all_nocum_r3: diff +0.0000 ci90 [+0.000,+0.000] p_better 0.000
+img2_ev12                          CV 0.9004 [0.880,0.917] | train-origin 0.904 val-origin 0.888 | long 0.804 short 0.908 | bat1/2/3 0.902/0.815/0.892 | per-class [1.0, 0.816, 0.903, 0.898, 0.908, 0.877]
+    시작 행 정확도 (evalp 문맥 첫 행, 4/5/6: n=[90, 86, 93]): [0.707, 0.624, 0.523]
+    img2_ev12 vs tab_all_nocum_r3: diff -0.0036 ci90 [-0.007,-0.001] p_better 0.012
+    img2_ev12 vs img2_base_nocum(재실행): diff -0.0036 ci90 [-0.007,-0.001] p_better 0.012
+img2_ev4                           CV 0.9023 [0.883,0.919] | train-origin 0.905 val-origin 0.891 | long 0.808 short 0.909 | bat1/2/3 0.904/0.812/0.896 | per-class [1.0, 0.816, 0.903, 0.899, 0.914, 0.882]
+    시작 행 정확도 (evalp 문맥 첫 행, 4/5/6: n=[90, 86, 93]): [0.7, 0.643, 0.52]
+    img2_ev4 vs tab_all_nocum_r3: diff -0.0016 ci90 [-0.005,+0.002] p_better 0.234
+    img2_ev4 vs img2_base_nocum(재실행): diff -0.0016 ci90 [-0.005,+0.002] p_better 0.234

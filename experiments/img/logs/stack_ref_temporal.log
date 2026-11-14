@@ -1,0 +1,9 @@
+base=ref 센서 피처 44개, CNN tag=temporal
+img_cnn_temporal_only              CV 0.7483 [0.715,0.779] | train-origin 0.748 val-origin 0.756 | long 0.650 short 0.745 | bat1/2/3 0.659/0.673/0.783 | per-class [0.961, 0.632, 0.762, 0.62, 0.738, 0.777] | official-val 0.7252
+img_base_ref                       CV 0.8813 [0.852,0.905] | train-origin 0.892 val-origin 0.840 | long 0.724 short 0.897 | bat1/2/3 0.887/0.807/0.857 | per-class [0.999, 0.805, 0.896, 0.862, 0.868, 0.858]
+    vs ref_gbdt_color_extra: diff +0.0015 ci90 [-0.003,+0.006] p_better 0.724
+    2→3 오분류 828, 3→2 960, 4↔5 345
+img_cnn_temporal_agg_only          CV 0.7426 [0.712,0.769] | train-origin 0.747 val-origin 0.730 | long 0.616 short 0.742 | bat1/2/3 0.660/0.652/0.744 | per-class [0.951, 0.581, 0.778, 0.643, 0.722, 0.779]
+    vs ref_gbdt_color_extra: diff -0.1372 ci90 [-0.163,-0.115] p_better 0.000
+    img_cnn_temporal_agg_only vs img_base_ref: diff -0.1387 ci90 [-0.164,-0.116] p_better 0.000
+    2→3 오분류 1413, 3→2 1184, 4↔5 301

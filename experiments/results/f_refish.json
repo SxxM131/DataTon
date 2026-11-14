@@ -1,0 +1,90 @@
+{
+ "name": "f_refish",
+ "cv": 0.8775292934773787,
+ "cv_per_rep": [
+  0.8775
+ ],
+ "per_class": [
+  0.9958,
+  0.7917,
+  0.8947,
+  0.858,
+  0.8672,
+  0.8578
+ ],
+ "origin_train": 0.8892498849136442,
+ "origin_val": 0.8337366654900188,
+ "long_exps": 0.7133259183467233,
+ "short_exps": 0.8932929424986412,
+ "bat1": 0.8851405805204179,
+ "bat2": 0.8036659167864727,
+ "bat3": 0.85617457220971,
+ "boot_ci90": [
+  0.8477061004166431,
+  0.9006079005470974
+ ],
+ "test11_mean": 0.8801176726242321,
+ "test11_sd": 0.04185317413904565,
+ "test11_q05_q95": [
+  0.796427329657516,
+  0.9317046646321184
+ ],
+ "public_minus_private_sd": 0.015839226695986926,
+ "cmp_ref": {
+  "diff": -0.002276879628123396,
+  "ci90": [
+   -0.007696756979445163,
+   0.002652946982010343
+  ],
+  "p_a_better": 0.21875,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "n_feat": 78,
+ "build_ms_11exp": 12.891292572021484,
+ "args": {
+  "name": "f_refish",
+  "feat": "all",
+  "cfg": "{\"windows\":[30],\"win_stats\":[\"mean\",\"max\"],\"std_windows\":[],\"delta_windows\":[30],\"cum\":false,\"thresh\":false}",
+  "train_rows": "pool",
+  "weight": "none",
+  "lgb": "{\"learning_rate\":0.1,\"n_estimators\":200,\"colsample_bytree\":0.3,\"max_bin\":63}",
+  "seeds": 1,
+  "n_repeats": 1,
+  "drop": "",
+  "no_official": true
+ },
+ "cfg": {
+  "extra": true,
+  "windows": [
+   30
+  ],
+  "win_stats": [
+   "mean",
+   "max"
+  ],
+  "std_windows": [],
+  "delta_windows": [
+   30
+  ],
+  "cum": false,
+  "thresh": false
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.1,
+  "n_estimators": 200,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 1.0,
+  "n_jobs": 6,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ }
+}

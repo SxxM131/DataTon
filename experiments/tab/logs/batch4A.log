@@ -1,0 +1,8 @@
+[tab_all_nocum_r3] 피처 266개, pool 43722 / evalp 31784, 증강 0행, 준비 0.7s, 11실험 피처생성 42ms
+tab_all_nocum_r3                   CV 0.9040 [0.884,0.920] | train-origin 0.906 val-origin 0.895 | long 0.816 short 0.910 | bat1/2/3 0.904/0.819/0.899 | per-class [1.0, 0.816, 0.903, 0.904, 0.917, 0.884] | official-val 0.8923
+  test11 0.903±0.030 | vs ref diff +0.0177 CI90 [+0.004,+0.036] p_better 0.99 | 38s
+  top feats: meas_t1_max120s:0.142, meas_t1_max300s:0.113, meas_t1_mean30s:0.080, since_t1_45:0.065, meas_t1_max30s:0.048, meas_t1:0.044, meas_v_min300s:0.041, meas_v_min120s:0.036, meas_v_mean120s:0.033, meas_t1_min30s:0.027, meas_t1_mean120s:0.023, meas_v_mean30s:0.022, since_v_0.9:0.018, meas_v:0.013, pt_mean_max30s:0.013
+[tab_s5_nocum_r3] 피처 168개, pool 43722 / evalp 31784, 증강 0행, 준비 0.5s, 11실험 피처생성 32ms
+tab_s5_nocum_r3                    CV 0.8981 [0.878,0.915] | train-origin 0.900 val-origin 0.890 | long 0.817 short 0.903 | bat1/2/3 0.903/0.798/0.901 | per-class [1.0, 0.801, 0.897, 0.897, 0.912, 0.882] | official-val 0.8834
+  test11 0.900±0.031 | vs ref diff +0.0118 CI90 [-0.003,+0.030] p_better 0.88 | 26s
+  top feats: since_t1_45:0.120, meas_t1:0.082, meas_t1_max300s:0.071, meas_t1_mean120s:0.062, meas_t1_mean30s:0.062, meas_t1_max30s:0.060, meas_v_min30s:0.052, meas_v_mean30s:0.044, meas_v_min300s:0.035, meas_t1_max120s:0.034, meas_t1_min300s:0.030, meas_v_min120s:0.023, meas_v:0.016, meas_t1_min120s:0.014, pt_frac50:0.013

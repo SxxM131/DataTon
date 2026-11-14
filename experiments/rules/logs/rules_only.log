@@ -1,0 +1,4 @@
+rules_only                         CV 0.8476 [0.820,0.871] | train-origin 0.858 val-origin 0.810 | long 0.663 short 0.869 | bat1/2/3 0.887/0.802/0.799 | per-class [1.0, 0.723, 0.838, 0.807, 0.842, 0.875]
+  vs tab_all_pool                 diff -0.0480 CI90 [-0.072,-0.024] p_better 0.00 (repeats ['pred_r0'])
+  vs ref_gbdt_color_extra         diff -0.0387 CI90 [-0.055,-0.022] p_better 0.00 (repeats ['pred_r0', 'pred_r1', 'pred_r2'])
+  총 1s

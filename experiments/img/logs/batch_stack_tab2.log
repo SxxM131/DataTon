@@ -1,0 +1,13 @@
+base=tab 센서 피처 323개, CNN tag=single
+img_cnn_single_only                CV 0.7866 [0.757,0.811] | train-origin 0.797 val-origin 0.747 | long 0.696 short 0.784 | bat1/2/3 0.723/0.698/0.805 | per-class [0.967, 0.702, 0.811, 0.696, 0.754, 0.79] | official-val 0.7392
+img_base_tab                       CV 0.8958 [0.874,0.914] | train-origin 0.899 val-origin 0.883 | long 0.817 short 0.899 | bat1/2/3 0.902/0.792/0.897 | per-class [1.0, 0.767, 0.885, 0.911, 0.92, 0.891]
+    2→3 오분류 1112, 3→2 976, 4↔5 182
+img_stack_tab_single_probs         CV 0.8939 [0.871,0.914] | train-origin 0.901 val-origin 0.866 | long 0.800 short 0.899 | bat1/2/3 0.902/0.789/0.893 | per-class [1.0, 0.77, 0.886, 0.905, 0.912, 0.89]
+    vs ref_gbdt_color_extra: diff +0.0141 ci90 [+0.001,+0.028] p_better 0.968
+    img_stack_tab_single_probs vs img_base_tab: diff -0.0019 ci90 [-0.009,+0.004] p_better 0.354
+    2→3 오분류 1094, 3→2 971, 4↔5 213
+    이미지 바꾸기: 예측이 달라진 비율 0.022 | 바꾼 뒤 macroF1 0.8870
+base=tab 센서 피처 323개, CNN tag=single
+img_cnn_single_only                CV 0.7866 [0.757,0.811] | train-origin 0.797 val-origin 0.747 | long 0.696 short 0.784 | bat1/2/3 0.723/0.698/0.805 | per-class [0.967, 0.702, 0.811, 0.696, 0.754, 0.79] | official-val 0.7392
+img_base_tab                       CV 0.8958 [0.874,0.914] | train-origin 0.899 val-origin 0.883 | long 0.817 short 0.899 | bat1/2/3 0.902/0.792/0.897 | per-class [1.0, 0.767, 0.885, 0.911, 0.92, 0.891]
+    2→3 오분류 1112, 3→2 976, 4↔5 182

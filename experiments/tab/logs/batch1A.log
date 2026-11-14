@@ -1,0 +1,5 @@
+[tab_s5_pool] 피처 205개, pool 43722 / evalp 31784, 증강 0행, 준비 0.4s, 11실험 피처생성 25ms
+tab_s5_pool                        CV 0.8924 [0.871,0.910] | train-origin 0.896 val-origin 0.880 | long 0.818 short 0.893 | bat1/2/3 0.902/0.786/0.897 | per-class [1.0, 0.76, 0.883, 0.907, 0.916, 0.888] | official-val 0.8840
+  test11 0.895±0.033 | vs ref diff +0.0126 CI90 [-0.004,+0.033] p_better 0.86 | 1084s
+  top feats: meas_t1_max120s:0.127, meas_t1_cummax:0.120, meas_t1:0.111, meas_v_cummin:0.101, meas_t1_max300s:0.090, meas_t1_max30s:0.059, meas_v_min300s:0.046, since_t1_45:0.044, meas_v_mean120s:0.019, v_ratio_max:0.011, meas_v_min120s:0.010, pt_mean_mean30s:0.010, meas_t1_fromcmax:0.009, meas_p_min300s:0.009, pt_frac20:0.009
+[tab_all_small] 피처 169개, pool 43722 / evalp 31784, 증강 0행, 준비 0.3s, 11실험 피처생성 18ms

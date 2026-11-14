@@ -1,0 +1,89 @@
+{
+ "name": "f_s5_small",
+ "cv": 0.8879312306644569,
+ "cv_per_rep": [
+  0.8879
+ ],
+ "per_class": [
+  0.9999,
+  0.7563,
+  0.8812,
+  0.8949,
+  0.9114,
+  0.8839
+ ],
+ "origin_train": 0.892454418051479,
+ "origin_val": 0.870980116246547,
+ "long_exps": 0.7987577172748365,
+ "short_exps": 0.8900525900304873,
+ "bat1": 0.8982052875802582,
+ "bat2": 0.7771892076241063,
+ "bat3": 0.8917590127528449,
+ "boot_ci90": [
+  0.8664131512099947,
+  0.9061052433683916
+ ],
+ "test11_mean": 0.8923121376728528,
+ "test11_sd": 0.032783645693926125,
+ "test11_q05_q95": [
+  0.8321772652959474,
+  0.938306541575595
+ ],
+ "public_minus_private_sd": 0.014639877927338332,
+ "cmp_ref": {
+  "diff": 0.008125057558954762,
+  "ci90": [
+   -0.007832693710938204,
+   0.02683919507396719
+  ],
+  "p_a_better": 0.75525,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "n_feat": 107,
+ "build_ms_11exp": 14.242410659790039,
+ "args": {
+  "name": "f_s5_small",
+  "feat": "sensor5",
+  "cfg": "{\"windows\":[30],\"win_stats\":[\"mean\",\"max\"],\"std_windows\":[],\"delta_windows\":[30,120]}",
+  "train_rows": "pool",
+  "weight": "none",
+  "lgb": "{\"learning_rate\":0.1,\"n_estimators\":200,\"colsample_bytree\":0.3,\"max_bin\":63}",
+  "seeds": 1,
+  "n_repeats": 1,
+  "drop": "",
+  "no_official": true
+ },
+ "cfg": {
+  "extra": false,
+  "windows": [
+   30
+  ],
+  "win_stats": [
+   "mean",
+   "max"
+  ],
+  "std_windows": [],
+  "delta_windows": [
+   30,
+   120
+  ]
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.1,
+  "n_estimators": 200,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 1.0,
+  "n_jobs": 6,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ }
+}

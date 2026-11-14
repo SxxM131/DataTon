@@ -1,0 +1,8 @@
+  color_stats 300장 vs 캐시 완전 일치: True
+  pool: shape (43722, 296), 값 완전 일치 True
+  evalp: shape (31784, 296), 값 완전 일치 True
+  test: shape (3451, 296), 값 완전 일치 True
+  피처 수: 296
+  CV rep0 (model.py) 0.9029, 참조 rules_tab_nocum_r3 rep0 0.9029
+  예측 일치율 1.000000, 확률 최대 차이 0.00e+00
+피처 일치 True, 총 17s

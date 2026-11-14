@@ -1,0 +1,12 @@
+[f_all_small] 피처 169개, pool 43722 / evalp 31784, 증강 0행, 준비 0.4s, 11실험 피처생성 27ms
+f_all_small                        CV 0.8903 [0.868,0.909] | train-origin 0.894 val-origin 0.876 | long 0.804 short 0.892 | bat1/2/3 0.900/0.777/0.891 | per-class [1.0, 0.759, 0.882, 0.905, 0.913, 0.883]
+  test11 0.895±0.033 | vs ref diff +0.0105 CI90 [-0.005,+0.028] p_better 0.85 | 34s
+  top feats: since_t1_45:0.149, meas_t1_cummax:0.097, meas_v_cummin:0.073, meas_t1_max30s:0.069, meas_t1:0.064, meas_t1_d0:0.061, meas_t1_mean30s:0.053, v_ratio_max:0.032, v_ratio0:0.025, meas_v_fromcmax:0.022, meas_v_d0:0.022, pt_p50:0.021, meas_t1_d30s:0.021, since_t1_150:0.016, relative_time_s:0.014
+[f_all_nothresh] 피처 311개, pool 43722 / evalp 31784, 증강 0행, 준비 0.7s, 11실험 피처생성 34ms
+f_all_nothresh                     CV 0.8937 [0.872,0.911] | train-origin 0.896 val-origin 0.882 | long 0.815 short 0.897 | bat1/2/3 0.895/0.793/0.898 | per-class [0.998, 0.765, 0.885, 0.909, 0.918, 0.888]
+  test11 0.895±0.033 | vs ref diff +0.0139 CI90 [-0.002,+0.033] p_better 0.91 | 44s
+  top feats: meas_t1_max120s:0.125, meas_t1_cummax:0.116, meas_t1_d0:0.068, meas_t1_max300s:0.061, meas_v_cummin:0.042, meas_t1_mean300s:0.040, v_ratio0:0.037, meas_t1_max30s:0.035, meas_t1_mean30s:0.032, meas_v_min300s:0.028, meas_t1_mean120s:0.025, v_ratio_max:0.023, meas_t1:0.021, meas_t1_d300s:0.020, meas_v_min120s:0.020
+[f_s5_small] 피처 107개, pool 43722 / evalp 31784, 증강 0행, 준비 0.2s, 11실험 피처생성 14ms
+f_s5_small                         CV 0.8879 [0.866,0.906] | train-origin 0.892 val-origin 0.871 | long 0.799 short 0.890 | bat1/2/3 0.898/0.777/0.892 | per-class [1.0, 0.756, 0.881, 0.895, 0.911, 0.884]
+  test11 0.892±0.033 | vs ref diff +0.0081 CI90 [-0.008,+0.027] p_better 0.76 | 20s
+  top feats: meas_t1_cummax:0.224, since_t1_45:0.096, meas_t1:0.088, meas_t1_max30s:0.080, meas_t1_mean30s:0.049, meas_v_cummin:0.047, meas_v_fromcmax:0.041, since_v_0.9:0.034, pt_p50:0.026, v_min_ratio_max:0.025, v_ratio_max:0.021, meas_v_d0:0.019, meas_t1_d0:0.014, since_t1_60:0.013, meas_v:0.012

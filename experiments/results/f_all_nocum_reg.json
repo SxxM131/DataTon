@@ -1,0 +1,78 @@
+{
+ "name": "f_all_nocum_reg",
+ "cv": 0.8982228251764264,
+ "cv_per_rep": [
+  0.8982
+ ],
+ "per_class": [
+  0.9999,
+  0.7972,
+  0.894,
+  0.8987,
+  0.9121,
+  0.8874
+ ],
+ "origin_train": 0.9039542683259728,
+ "origin_val": 0.8753609167331377,
+ "long_exps": 0.790865530826444,
+ "short_exps": 0.9088362320073421,
+ "bat1": 0.9026501518155698,
+ "bat2": 0.8091550311289634,
+ "bat3": 0.8903806456317634,
+ "boot_ci90": [
+  0.8752363991803125,
+  0.9170479577504647
+ ],
+ "test11_mean": 0.8983402770282928,
+ "test11_sd": 0.03582897773617235,
+ "test11_q05_q95": [
+  0.8319735298363348,
+  0.9458212061322611
+ ],
+ "public_minus_private_sd": 0.014748625756991457,
+ "cmp_ref": {
+  "diff": 0.018416652070924244,
+  "ci90": [
+   0.006922507781375237,
+   0.03175257598708806
+  ],
+  "p_a_better": 0.99925,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "n_feat": 266,
+ "build_ms_11exp": 40.43078422546387,
+ "args": {
+  "name": "f_all_nocum_reg",
+  "feat": "all",
+  "cfg": "{\"cum\":false}",
+  "train_rows": "pool",
+  "weight": "none",
+  "lgb": "{\"learning_rate\":0.05,\"n_estimators\":300,\"num_leaves\":15,\"min_child_samples\":100,\"colsample_bytree\":0.3,\"max_bin\":63,\"reg_lambda\":5.0}",
+  "seeds": 1,
+  "n_repeats": 1,
+  "drop": "",
+  "no_official": true
+ },
+ "cfg": {
+  "extra": true,
+  "cum": false
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.05,
+  "n_estimators": 300,
+  "num_leaves": 15,
+  "min_child_samples": 100,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 5.0,
+  "n_jobs": 6,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ }
+}

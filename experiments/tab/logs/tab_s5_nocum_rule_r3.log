@@ -1,0 +1,4 @@
+[tab_s5_nocum_rule_r3] 피처 177개, pool 43722 / evalp 31784, 증강 0행, 준비 0.4s, 11실험 피처생성 24ms
+tab_s5_nocum_rule_r3               CV 0.9001 [0.880,0.916] | train-origin 0.902 val-origin 0.892 | long 0.820 short 0.904 | bat1/2/3 0.903/0.807/0.903 | per-class [1.0, 0.801, 0.898, 0.902, 0.914, 0.885] | official-val 0.8779
+  test11 0.901±0.030 | vs ref diff +0.0138 CI90 [-0.001,+0.032] p_better 0.93 | 26s
+  top feats: since_t1_45:0.105, t1_cummax:0.098, meas_t1_max120s:0.083, meas_v_min300s:0.070, meas_t1_max300s:0.049, rule_t1max_m50:0.049, meas_t1:0.041, meas_v_min120s:0.034, rule_t1max_ge45:0.033, meas_v_min30s:0.029, meas_v_mean120s:0.028, rule_since_t1_45:0.027, meas_t1_mean30s:0.027, rule_t1_m50:0.023, pt_mean_max30s:0.013

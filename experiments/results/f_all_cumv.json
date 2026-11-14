@@ -1,0 +1,77 @@
+{
+ "name": "f_all_cumv",
+ "cv": 0.8980317061810253,
+ "cv_per_rep": [
+  0.898
+ ],
+ "per_class": [
+  0.9999,
+  0.7893,
+  0.8915,
+  0.9062,
+  0.9171,
+  0.8842
+ ],
+ "origin_train": 0.9014463832678117,
+ "origin_val": 0.8840851109583544,
+ "long_exps": 0.8060543099373677,
+ "short_exps": 0.9061525846893114,
+ "bat1": 0.9050014889972579,
+ "bat2": 0.8088097722649549,
+ "bat3": 0.8914662424477279,
+ "boot_ci90": [
+  0.8767139934633145,
+  0.9159693087512042
+ ],
+ "test11_mean": 0.8993058170156575,
+ "test11_sd": 0.033877240195455585,
+ "test11_q05_q95": [
+  0.8360286184411924,
+  0.9450115948864537
+ ],
+ "public_minus_private_sd": 0.014476868817036862,
+ "cmp_ref": {
+  "diff": 0.018225533075523215,
+  "ci90": [
+   0.005094918077617233,
+   0.03481212544451591
+  ],
+  "p_a_better": 0.997,
+  "repeats": [
+   "pred_r0"
+  ]
+ },
+ "n_feat": 269,
+ "build_ms_11exp": 44.27003860473633,
+ "args": {
+  "name": "f_all_cumv",
+  "feat": "all",
+  "cfg": "{}",
+  "train_rows": "pool",
+  "weight": "none",
+  "lgb": "{\"learning_rate\":0.1,\"n_estimators\":200,\"colsample_bytree\":0.3,\"max_bin\":63}",
+  "seeds": 1,
+  "n_repeats": 1,
+  "drop": "*_cummax,*_cummin,*_d0,*_fromcmax,*_since_cmax",
+  "no_official": true
+ },
+ "cfg": {
+  "extra": true
+ },
+ "lgb": {
+  "objective": "multiclass",
+  "learning_rate": 0.1,
+  "n_estimators": 200,
+  "num_leaves": 31,
+  "min_child_samples": 40,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.3,
+  "reg_lambda": 1.0,
+  "n_jobs": 6,
+  "verbose": -1,
+  "deterministic": true,
+  "force_row_wise": true,
+  "max_bin": 63
+ }
+}

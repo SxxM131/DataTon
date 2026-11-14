@@ -1,0 +1,19 @@
+out0: held-out evalp rows 6301 macroF1 0.7690 (22s)
+out1: held-out evalp rows 6459 macroF1 0.8558 (21s)
+out2: held-out evalp rows 6393 macroF1 0.7060 (21s)
+out3: held-out evalp rows 6530 macroF1 0.8132 (20s)
+out4: held-out evalp rows 6101 macroF1 0.8043 (21s)
+done
+out0: held-out evalp rows 6301 macroF1 0.7883 (22s)
+out1: held-out evalp rows 6459 macroF1 0.8759 (22s)
+out2: held-out evalp rows 6393 macroF1 0.7092 (22s)
+out3: held-out evalp rows 6530 macroF1 0.8156 (22s)
+out4: held-out evalp rows 6101 macroF1 0.8299 (21s)
+done
+  scaler.scale(loss).backward(); scaler.step(opt); scaler.update(); sched.step()
+out0: held-out evalp rows 6301 macroF1 0.7790 (22s)
+out1: held-out evalp rows 6459 macroF1 0.8021 (21s)
+out2: held-out evalp rows 6393 macroF1 0.7365 (21s)
+out3: held-out evalp rows 6530 macroF1 0.8485 (21s)
+out4: held-out evalp rows 6101 macroF1 0.7768 (20s)
+done

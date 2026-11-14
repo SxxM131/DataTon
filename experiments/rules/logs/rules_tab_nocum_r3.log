@@ -1,0 +1,23 @@
+[rules_tab_nocum_r3] mode tab+rules, 피처 296개, 준비 0.7s
+  rep 0 fold 0 done 4s
+  rep 0 fold 1 done 7s
+  rep 0 fold 2 done 11s
+  rep 0 fold 3 done 14s
+  rep 0 fold 4 done 17s
+  rep 1 fold 0 done 21s
+  rep 1 fold 1 done 24s
+  rep 1 fold 2 done 28s
+  rep 1 fold 3 done 31s
+  rep 1 fold 4 done 35s
+  rep 2 fold 0 done 38s
+  rep 2 fold 1 done 41s
+  rep 2 fold 2 done 44s
+  rep 2 fold 3 done 47s
+  rep 2 fold 4 done 53s
+  top feats: r_stage:0.103, r_n_fired:0.095, r_t1_over50:0.073, r_p_from_stage2:0.070, since_t1_45:0.051, meas_t1_max300s:0.051, r_since_t1_45:0.042, meas_v_min300s:0.039, meas_t1_mean30s:0.037, r_since_vdrop:0.034, meas_t1_max30s:0.027, r_t1_rate_cmax4:0.026, meas_t1_max120s:0.020, meas_v_min120s:0.017, meas_t1:0.016, r_n_vdrop:0.014, pt_frac50:0.013, meas_v_min30s:0.012, r_v_from_max:0.009, r_since_stage5_rule:0.009
+  rule feats rank: r_stage:1, r_n_fired:2, r_t1_over50:3, r_p_from_stage2:4, r_since_t1_45:7, r_since_vdrop:10, r_t1_rate_cmax4:12, r_n_vdrop:16, r_v_from_max:19, r_since_stage5_rule:20, r_since_t1_50:23, r_since_peak_passed:26, r_S_cummax:34, r_p_from_cummin:40, r_S:50, r_since_v_1p355:75, r_S_from_cummax:77, r_S_d60s:83, r_S_rate:101, r_t1_rate:127, r_p_d30s:158, r_S_since_cummax:163, r_S_d30s:172, r_p_rate:225, r_p_d60s:226, r_v_dprev:231, r_since_th170:241, r_since_p_rise:254, r_since_t1_fast:278, r_since_v_zero:283
+rules_tab_nocum_r3                 CV 0.9074 [0.887,0.924] | train-origin 0.912 val-origin 0.891 | long 0.806 short 0.916 | bat1/2/3 0.910/0.824/0.901 | per-class [1.0, 0.814, 0.902, 0.907, 0.922, 0.899]
+  vs tab_all_nocum_r3             diff +0.0034 CI90 [-0.002,+0.009] p_better 0.85 (repeats ['pred_r0', 'pred_r1', 'pred_r2'])
+  vs tab_all_pool                 diff +0.0076 CI90 [-0.000,+0.016] p_better 0.94 (repeats ['pred_r0'])
+  vs ref_gbdt_color_extra         diff +0.0211 CI90 [+0.010,+0.035] p_better 1.00 (repeats ['pred_r0', 'pred_r1', 'pred_r2'])
+  총 54s
