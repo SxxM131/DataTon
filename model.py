@@ -5,17 +5,25 @@
   2. 이미지 색 통계 11개 (무지개 의사색상 → 의사 온도, 이미지마다 독립 계산)
   3. 테이블 피처 266개: 원시 센서·가스·환경·메타 + 이미지 색 통계 + 초 기준 과거 윈도우·변화량·임계 도달 후 경과초
   4. 규칙 피처 30개 (r_*): 라벨 규칙 역추적에서 얻은 상수 임계값 기반 인과 피처
-  5. LightGBM 다중 분류 (결정적 설정)
-  6. pairdiff CNN: 현재 + 직전 프레임 + 차이 (9채널, 128×128, timm resnet18) → 6단계 확률
-  7. 후기 융합: P = P_tab^(1-w) · P_cnn^w (w=0.2) → argmax + 1
+  5. 압력 상승 피처 (q_*): 3단계(압력 연속 상승) 판정을 과거 관측만으로 근사 — 2·3단계 재판정 모델 전용
+  6. LightGBM 다중 분류 2개 (결정적 설정): 기본 모델(296개 피처), 2·3단계 재판정 모델(296개 + 압력 상승 피처)
+  7. pairdiff CNN: 현재 + 직전 프레임 + 차이 (9채널, 128×128, timm resnet18) → 6단계 확률
+  8. 후기 융합: P = P_tab^(1-w) · P_cnn^w (w=0.2) → argmax + 1
+  9. 2·3단계 재판정: 8의 결과가 2 또는 3인 행만, 재판정 모델(테이블 단독)의 p2·p3 중 큰 쪽으로 다시 정한다.
+     나머지 단계(1, 4, 5, 6)의 예측은 건드리지 않는다.
+     (2·3단계 경계는 열화상에 보이지 않아 이미지 확률을 섞지 않는다 — 검증에서도 섞지 않는 쪽이 같거나 나았다.)
+ 10. 5단계 근거 확인: 각형 28Ah 가열·각형 280Ah 과충전 실험에서 5단계로 나온 행은, 전압 급락 이후 온도 급상승이
+     한 번이라도 관측된 뒤에만 인정한다 (아니면 4단계). 모델이 '시간이 지났다'는 이유만으로 5단계로 넘기는 것을 막는다.
 
 모든 시계열 피처는 입력 frame에 있는 행만, 실험별로 relative_time_s 정렬 후 현재 이하 시각의 관측만 사용한다.
-학습된 통계(스케일러 등)는 없고, 실험 전체 통계·미래 관측·다른 실험 관측을 쓰지 않는다.
+추론 대상 실험의 전체 통계·미래 관측·다른 실험 관측을 쓰지 않는다.
+학습 데이터에서 산출해 저장하는 통계는 하나뿐이다: 배터리 구성(종류·용량·유발 방식)별 압력 변동 폭의 중앙값 (5번 피처의 단위 환산용).
 → 행 순서, 다른 실험 유무, 미래 행 유무와 무관하게 같은 행에는 같은 값이 나온다.
 
 원본 실험 코드(이 파일은 import하지 않고 복사함):
   experiments/exp01_image_color.py (color_stats), experiments/tab/feats.py (build),
   experiments/rules/rules.py (rule_features), experiments/rules/run_rules.py (LightGBM 설정),
+  experiments/stage3/presrise.py (pressure_features), experiments/stage3/run_presrise.py (2·3단계 재판정),
   experiments/img/finetune2.py, experiments/img/infer_pair.py, experiments/img/infer_bench.py (CNN)
 """
 from __future__ import annotations
@@ -390,7 +398,166 @@ def build_features(frame: pd.DataFrame, image_features: pd.DataFrame) -> pd.Data
 
 
 # ---------------------------------------------------------------------------
-# 5. LightGBM (experiments/rules/run_rules.py: LGB_DEFAULT + fast 설정, random_state 42)
+# 5. 압력 상승 피처 (experiments/stage3/presrise.py, 열 이름 q_*) — 2·3단계 재판정 모델 전용
+#    3단계는 '표면 온도 50~90℃에서 압력이 연속으로 오르기 시작하는 지점'이다 (원본 데이터셋 구축 가이드, 공개 문서).
+#    가이드의 정의는 '20초 뒤 압력'과 '실험 전체 압력 범위로 정규화한 값'을 쓰므로 그대로는 쓸 수 없다
+#    (미래 관측·실험 전체 통계 금지). 여기서는 과거만으로 근사한다.
+#      - 20초(5~30초) 전 대비 압력 상승량 p(t) − p(t−w). 온도 조건(50~90℃)은 w초 전 시점 기준과 현재 시점 기준 두 가지.
+#      - 실험 전체 압력 범위 대신 '학습 실험에서 구한 같은 배터리 구성의 압력 범위 중앙값'으로 나눈다 (range_table).
+#        학습 데이터에서만 산출한 전처리 통계이며, 추론 대상 실험의 값은 현재 이하 시각의 관측만 쓴다.
+#      - 범위 추정이 틀릴 수 있어 임계값을 여러 개(0.01~0.08) 두고, 초기 압력 p0로 나눈 버전도 함께 둔다.
+#      - 가이드에서 임계 규칙이 다른 구성(각형 280Ah 가열, 파우치 73Ah 가열 SOC 50%)은 피처를 비워 둔다 (NaN).
+# ---------------------------------------------------------------------------
+P_KEY = ['bat_class', 'bat_cc', 'tr_method']
+P_THRS = (0.01, 0.02, 0.03, 0.04, 0.08)
+P_LAGS = (5.0, 10.0, 15.0, 20.0, 30.0)
+
+
+def _cfg_key(bat_class, bat_cc, tr_method) -> tuple:
+    """배터리 구성 키 (종류, 용량, 유발 방식). 결측은 -1."""
+    f = lambda x: -1.0 if pd.isna(x) else round(float(x), 3)  # noqa: E731
+    return (f(bat_class), f(bat_cc), f(tr_method))
+
+
+def pressure_ranges(frame: pd.DataFrame) -> pd.DataFrame:
+    """학습 실험별 압력 범위(max − min)와 구성 키. 학습 데이터에만 호출한다 (index = experiment_id)."""
+    g = frame.assign(experiment_id=frame['experiment_id'].astype(str)).groupby('experiment_id')
+    out = g[P_KEY].first()
+    out['rng'] = g['meas_p'].max() - g['meas_p'].min()
+    return out
+
+
+def range_table(exp_rng: pd.DataFrame) -> dict:
+    """구성별 압력 범위 중앙값 (+ 배터리 종류별·전체 중앙값을 대체값으로). weights에 저장되는 유일한 학습 통계."""
+    cfg = {_cfg_key(*k): float(v) for k, v in exp_rng.groupby(P_KEY)['rng'].median().items()}
+    cls = {round(float(k), 3): float(v) for k, v in exp_rng.groupby('bat_class')['rng'].median().items()}
+    return {'cfg': cfg, 'cls': cls, 'all': float(exp_rng['rng'].median())}
+
+
+def lookup_range(table: dict, key: tuple) -> float:
+    if key in table['cfg']:
+        return table['cfg'][key]
+    return table['cls'].get(key[0], table['all'])
+
+
+def loo_ranges(exp_rng: pd.DataFrame) -> dict:
+    """(학습용) 각 학습 실험에 대해 자기 자신을 뺀 같은 구성 실험들의 범위 중앙값 — 추론 때와 같은 조건을 만든다."""
+    out = {}
+    all_med = float(exp_rng['rng'].median())
+    for e, r in exp_rng.iterrows():
+        same = exp_rng[(exp_rng[P_KEY] == r[P_KEY]).all(axis=1)].drop(index=e)
+        if len(same) == 0:
+            same = exp_rng[exp_rng.bat_class == r.bat_class].drop(index=e)
+        out[e] = float(same['rng'].median()) if len(same) else all_med
+    return out
+
+
+def doc_threshold(bat_class, bat_cc, tr_method, soc_status) -> float:
+    """가이드의 구성별 기본 임계값: 각형 280Ah 가열, 파우치 73Ah 가열(SOC 50%)은 0.04, 나머지는 0.02."""
+    special = (bat_class == 3 and bat_cc == 280 and tr_method == 1) or (bat_class == 2 and bat_cc == 73 and tr_method == 1 and soc_status == 1)
+    return 0.04 if special else 0.02
+
+
+def _pressure_one(t, p, t1, R, thr_doc=0.02) -> dict:
+    """한 실험(시간순 정렬)의 압력 상승 피처. 모든 누적은 과거 방향(accumulate)."""
+    n = len(t)
+    out = {'q_R': np.full(n, R), 'q_doc_thr': np.full(n, thr_doc)}
+    t1cm = np.fmax.accumulate(t1)
+    gate50 = t1cm >= 50
+    pmin = np.fmin.accumulate(p)
+    out['q_level'] = (p - pmin) / R                                   # 지금까지의 최솟값 대비 압력 수준 (추정 범위 단위)
+    run_rng = np.maximum(np.fmax.accumulate(p) - pmin, 1e-6)
+    for w in P_LAGS:
+        j = np.searchsorted(t, t - w, side='right') - 1               # t−w 이하의 마지막 관측
+        ok = j >= 0
+        d = np.zeros(n); d[ok] = p[ok] - p[j[ok]]
+        t1b = np.full(n, np.nan); t1b[ok] = t1[j[ok]]
+        valid = ok & (t1b >= 50) & (t1b <= 90)                        # w초 전 시점의 온도 조건 (w초 늦게 확인하는 셈)
+        dr = np.where(valid, d / R, 0.0)
+        k = int(w)
+        out[f'q_d{k}'] = d / R
+        out[f'q_d{k}_cm'] = np.fmax.accumulate(dr)                    # 조건을 만족한 상승량의 지금까지 최댓값
+        valid_c = ok & (t1 >= 50) & (t1 <= 90)                        # 현재 온도 기준 (지연 없음)
+        drc = np.where(valid_c, d / R, 0.0)
+        out[f'q_d{k}_cmc'] = np.fmax.accumulate(drc)
+        if w == 20.0:
+            out['q_d20_runrng'] = np.where(valid, d / run_rng, 0.0)
+            for th in P_THRS:
+                first = np.minimum.accumulate(np.where(dr >= th, t, np.inf))
+                out[f'q_since_{int(th*100):02d}'] = np.where(np.isfinite(first), t - first, -1.0)
+                first = np.minimum.accumulate(np.where(drc >= th, t, np.inf))
+                out[f'q_sincec_{int(th*100):02d}'] = np.where(np.isfinite(first), t - first, -1.0)
+    # 초기 압력 p0 기준 버전 (실험 첫 관측 = 항상 과거)
+    p0 = max(abs(p[0]), 1e-3) if n else 1.0
+    out['q_p0'] = np.full(n, p[0] if n else np.nan)
+    out['q_p_over_p0'] = p / p0
+    for w in (10.0, 20.0, 30.0):
+        j = np.searchsorted(t, t - w, side='right') - 1
+        ok = j >= 0
+        d = np.zeros(n); d[ok] = p[ok] - p[j[ok]]
+        t1b = np.full(n, np.nan); t1b[ok] = t1[j[ok]]
+        k = int(w)
+        dl = np.where(ok & (t1b >= 50) & (t1b <= 90), d / p0, 0.0)
+        dc = np.where(ok & (t1 >= 50) & (t1 <= 90), d / p0, 0.0)
+        out[f'q_d{k}_p0cm'] = np.fmax.accumulate(dl)
+        out[f'q_d{k}_p0cmc'] = np.fmax.accumulate(dc)
+        if w == 20.0:
+            for th in (0.01, 0.02, 0.03, 0.05):
+                first = np.minimum.accumulate(np.where(dc >= th, t, np.inf))
+                out[f'q_sincep0_{int(th*100):02d}'] = np.where(np.isfinite(first), t - first, -1.0)
+    # 가이드 임계값(구성별 0.02 / 0.04) 기준: 누적 최대 상승량 ÷ 임계, 임계를 처음 넘은 뒤 경과 초
+    for nm in ('q_d20_cm', 'q_d20_cmc'):
+        out[nm + '_doc'] = out[nm] / thr_doc
+    for nm, src in (('q_since_doc', 'q_d20_cm'), ('q_sincec_doc', 'q_d20_cmc')):
+        first = np.minimum.accumulate(np.where(out[src] >= thr_doc, t, np.inf))
+        out[nm] = np.where(np.isfinite(first), t - first, -1.0)
+    out['q_d20_p0cmc_doc'] = out['q_d20_p0cmc'] / (thr_doc * 1.5)
+    out['q_t1_in'] = ((t1 >= 50) & (t1 <= 90)).astype(float)
+    t50 = t[gate50][0] if gate50.any() else np.inf
+    out['q_since_t50'] = np.where(gate50, t - t50, -1.0)
+    return out
+
+
+Q_COLS = list(_pressure_one(np.zeros(1), np.ones(1), np.full(1, 20.0), 1.0))
+
+
+def pressure_features(frame: pd.DataFrame, table: dict, own_range: dict | None = None) -> pd.DataFrame:
+    """압력 상승 피처 (index = frame.index). frame에 들어 있는 행만으로, 실험별·시간순으로 계산한다.
+
+    table: range_table() 결과 (학습 데이터 통계). own_range: (학습 시에만) 실험별 '자기 자신을 뺀' 범위 추정값.
+    """
+    n = len(frame)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float) if c in frame.columns else np.full(n, np.nan)  # noqa: E731
+    t_all, p_all, t1_all = num('relative_time_s'), num('meas_p'), num('meas_t1')
+    meta = {c: num(c) for c in P_KEY + ['soc_status']}
+    res = {k: np.full(n, np.nan) for k in Q_COLS}
+    for e, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]                 # 시간순 (동률은 sample_id) → 입력 행 순서와 무관
+        i0 = idx[0]
+        bc, cc, tm, soc = (meta[c][i0] for c in P_KEY + ['soc_status'])
+        thr = doc_threshold(bc, cc, tm, soc)
+        if thr > 0.03:
+            continue                                                  # 임계 규칙이 다른 구성은 비워 둔다 (NaN)
+        R = own_range[e] if own_range is not None and e in own_range else lookup_range(table, _cfg_key(bc, cc, tm))
+        with np.errstate(invalid='ignore', divide='ignore'):
+            o = _pressure_one(t_all[idx], p_all[idx], t1_all[idx], max(float(R), 1e-6), thr)
+        for k in Q_COLS:
+            res[k][idx] = o[k]
+    return pd.DataFrame(res, index=frame.index)
+
+
+def redecide_23(pred: np.ndarray, p23: np.ndarray) -> np.ndarray:
+    """pred가 2 또는 3인 행만 p23(재판정 모델 확률)의 p2·p3 중 큰 쪽으로 다시 정한다. 다른 단계는 그대로."""
+    out = np.asarray(pred).copy()
+    sel = (out == 2) | (out == 3)
+    out[sel] = np.where(p23[sel, 2] > p23[sel, 1], 3, 2)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 6. LightGBM (experiments/rules/run_rules.py: LGB_DEFAULT + fast 설정, random_state 42)
 # ---------------------------------------------------------------------------
 LGB_PARAMS = dict(objective='multiclass', learning_rate=0.1, n_estimators=200, num_leaves=31, min_child_samples=40,
                   subsample=0.8, subsample_freq=1, colsample_bytree=0.3, max_bin=63, reg_lambda=1.0, n_jobs=4,
@@ -403,7 +570,7 @@ def build_model(**overrides):
 
 
 # ---------------------------------------------------------------------------
-# 6. pairdiff CNN (현재 프레임 + 직전 프레임 + 차이 = 9채널, 128×128)
+# 7. pairdiff CNN (현재 프레임 + 직전 프레임 + 차이 = 9채널, 128×128)
 #    직전 프레임 = 입력에 있는 같은 실험의 행 중 시간상 바로 앞 관측 (실험 첫 행은 자기 자신 → 차이 0).
 #    추론은 1장씩 + TF32 off + cudnn 결정적 → 배치 구성·행 순서와 무관하게 비트 단위 동일.
 # ---------------------------------------------------------------------------
@@ -491,7 +658,7 @@ def cnn_probs(frame: pd.DataFrame, images: np.ndarray, model, device) -> np.ndar
 
 
 # ---------------------------------------------------------------------------
-# 7. 후기 융합 (experiments/img/latefuse.py 와 같은 식)
+# 8. 후기 융합 (experiments/img/latefuse.py 와 같은 식)
 # ---------------------------------------------------------------------------
 def fuse(p_tab: np.ndarray, p_cnn: np.ndarray, w: float = FUSE_W) -> np.ndarray:
     """P ∝ P_tab^(1-w) · P_cnn^w (로그 공간, 안정화 상수 포함) → 행마다 합 1로 정규화."""
@@ -499,6 +666,64 @@ def fuse(p_tab: np.ndarray, p_cnn: np.ndarray, w: float = FUSE_W) -> np.ndarray:
     z = z - z.max(1, keepdims=True)
     p = np.exp(z)
     return p / p.sum(1, keepdims=True)
+
+
+# ---------------------------------------------------------------------------
+# 9. 5단계 근거 확인 (experiments/robust/surge_gate.py)
+#    가이드상 각형 28Ah 가열·각형 280Ah 과충전의 5단계는 '4단계(전압 급락) 이후 온도가 급상승하는 지점'이다.
+#    학습 실험 23개 전부에서 아래 급상승 조건은 5단계 시작 +0~+2행에 처음 참이 되고, 4단계 동안에는 한 번도 참이 아니었다
+#    (4단계 중 최대: 직전 관측 대비 0.80℃/s, 10초 상승 9.6℃).
+#    행 모델은 4단계가 학습 실험보다 길어지면 급상승 없이도 5단계로 넘기는 경향이 있어 (4단계 구간을 3~5배로 늘린 합성 검증에서
+#    4단계 행의 13~40%를 5단계로 예측), 급상승을 관측하기 전의 5단계 예측은 4단계로 되돌린다.
+#    과거 관측과 고정 상수만 사용한다 (학습 통계 없음).
+# ---------------------------------------------------------------------------
+SURGE_CFGS = ((3, 28.0, 1), (3, 280.0, 2))     # (bat_class, bat_cc, tr_method)
+SURGE_RISE = 12.0                              # 10초(이하 마지막 관측) 전 대비 온도 상승 ℃
+SURGE_WINDOW_S = 10.0
+
+
+def surge_seen(frame: pd.DataFrame) -> np.ndarray:
+    """전압 급락 이벤트 이후 온도 급상승을 관측한 적이 있는가 (frame 행 위치 순서, bool).
+
+    급상승 = 직전 관측 대비 초당 상승 ≥ T1_RATE_STAGE5(0.84℃/s) 또는 10초 이하 전 마지막 관측 대비 상승 ≥ SURGE_RISE.
+    비교 시점도 전압 급락(직전 관측 대비 ≤ V_DROP 또는 V < V_LOW) 이후여야 한다. 실험별 시간순, 현재 이하 관측만 사용.
+    """
+    n = len(frame)
+    out = np.zeros(n, dtype=bool)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
+    t_all, t1_all, v_all = num('relative_time_s'), num('meas_t1'), num('meas_v')
+    for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        idx = idx[np.lexsort((sid[idx], t_all[idx]))]
+        t, t1, v = t_all[idx], t1_all[idx], v_all[idx]
+        with np.errstate(invalid='ignore', divide='ignore'):
+            dv = np.r_[0.0, np.diff(v)]
+            ev = (np.nan_to_num(dv, nan=0.0) <= V_DROP) | (np.nan_to_num(v, nan=np.inf) < V_LOW)
+            if not ev.any():
+                continue
+            ivd = int(np.argmax(ev))
+            j = np.searchsorted(t, t - SURGE_WINDOW_S, side='right') - 1
+            ok = j >= ivd
+            rise = np.zeros(len(t)); rise[ok] = t1[ok] - t1[j[ok]]
+            rate = np.r_[0.0, np.diff(t1) / np.diff(t)]
+            rate[:ivd + 1] = 0.0
+        hit = (np.nan_to_num(rise, nan=0.0) >= SURGE_RISE) | (np.nan_to_num(rate, nan=0.0) >= T1_RATE_STAGE5)
+        out[idx] = np.maximum.accumulate(hit)
+    return out
+
+
+def gate_stage5(pred: np.ndarray, frame: pd.DataFrame) -> np.ndarray:
+    """SURGE_CFGS 구성에서 5단계 예측인데 온도 급상승이 아직 관측되지 않은 행을 4단계로 되돌린다. 다른 행은 그대로."""
+    out = np.asarray(pred).copy()
+    num = lambda c: pd.to_numeric(frame[c], errors='coerce').to_numpy(dtype=float)  # noqa: E731
+    bc, cc, tm = num('bat_class'), num('bat_cc'), num('tr_method')
+    target = np.zeros(len(frame), dtype=bool)
+    for a, b, c in SURGE_CFGS:
+        target |= (bc == a) & (cc == b) & (tm == c)
+    if target.any():
+        out[target & (out == 5) & ~surge_seen(frame)] = 4
+    return out
 
 
 def to_label(p: np.ndarray) -> np.ndarray:

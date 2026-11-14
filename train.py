@@ -1,8 +1,9 @@
 """17팀 최종 학습 스크립트.
 
 예) python train.py --data_dir <battery_data_light 경로>
-    → (1) 평가: Train 78개 실험으로 학습 → Validation 19개 실험 Macro F1 (테이블 단독 / 이미지 융합)
+    → (1) 평가: Train 78개 실험으로 학습 → Validation 19개 실험 Macro F1 (테이블 단독 / 2·3단계 재판정 / 이미지 융합)
       (2) 최종 학습: Train + Validation 97개 실험 전체 → weights/tab_lgbm.joblib
+          (기본 모델 + 2·3단계 재판정 모델 + 구성별 압력 범위 중앙값 표)
       (3) CNN 가중치: 기본은 제출에 쓴 학습 완료 가중치(--cnn_source)를 weights/cnn_pairdiff.pt 로 복사.
           --train_cnn 을 주면 PNG를 직접 읽어 97개 실험 전체로 다시 학습 (GPU 학습은 비트 재현이 안 되므로
           제출 결과와 정확히 같은 가중치는 레포에 들어 있는 weights/cnn_pairdiff.pt 이다).
@@ -169,6 +170,7 @@ def main():
     y = pool.label.to_numpy(int)
     Xp = M.build_features(pool, color)
     columns = list(Xp.columns)
+    columns23 = columns + M.Q_COLS                                          # 2·3단계 재판정 모델의 입력 열
     need_images = args.eval_cnn or args.train_cnn
     images = M.decode_images(pool['image_file'].tolist()) if need_images else None
 
@@ -177,6 +179,10 @@ def main():
     if not args.skip_eval:
         tr = (pool.origin == 'train').to_numpy()
         m = M.build_model().fit(Xp[tr], y[tr])
+        er_tr = M.pressure_ranges(pool[tr])                                 # 압력 범위 통계도 Train 실험에서만 산출
+        table_tr = M.range_table(er_tr)
+        Q_tr = M.pressure_features(pool[tr], table_tr, own_range=M.loo_ranges(er_tr))
+        m23 = M.build_model().fit(pd.concat([Xp[tr], Q_tr], axis=1)[columns23], y[tr])
         cnn = None
         if args.eval_cnn:
             import torch
@@ -188,14 +194,19 @@ def main():
         for name, ev in [('raw', val), ('test_like', to_test_like(val))]:
             Xe = M.build_features(ev, color)[columns]              # 검증 행만 보고 피처 생성
             p_tab = m.predict_proba(Xe)
+            p_tab23 = m23.predict_proba(pd.concat([Xe, M.pressure_features(ev, table_tr)], axis=1)[columns23])
             ye = ev.label.to_numpy(int)
-            s = {'n_rows': len(ev), 'tab': macro_f1(ye, M.to_label(p_tab)), 'tab_per_class': per_class(ye, M.to_label(p_tab))}
+            redo = M.gate_stage5(M.redecide_23(M.to_label(p_tab), p_tab23), ev)   # 2·3단계 재판정 + 5단계 근거 확인 (이미지 융합 없이)
+            s = {'n_rows': len(ev), 'tab': macro_f1(ye, M.to_label(p_tab)), 'tab_per_class': per_class(ye, M.to_label(p_tab)),
+                 'tab_redo23': macro_f1(ye, redo), 'tab_redo23_per_class': per_class(ye, redo)}
             if cnn is not None:
                 pos = pool.index.get_indexer(ev.index)
                 p_cnn = M.cnn_probs(ev, images[pos], cnn, 'cuda')
                 pf = M.fuse(p_tab, p_cnn)
+                final_pred = M.gate_stage5(M.redecide_23(M.to_label(pf), p_tab23), ev)   # test.py와 같은 최종 예측
                 s.update(cnn=macro_f1(ye, M.to_label(p_cnn)), fused=macro_f1(ye, M.to_label(pf)),
-                         fused_per_class=per_class(ye, M.to_label(pf)))
+                         fused_per_class=per_class(ye, M.to_label(pf)),
+                         final=macro_f1(ye, final_pred), final_per_class=per_class(ye, final_pred))
             scores[name] = s
             print(f'  Validation({name}, {len(ev)}행): ' + ', '.join(f'{k} {v:.4f}' if isinstance(v, float) else f'{k} {v}' for k, v in s.items()), flush=True)
         if cnn is not None:
@@ -204,10 +215,15 @@ def main():
 
     # ---------------- (2) 최종 학습: 97개 실험 전체 ----------------
     final = M.build_model().fit(Xp, y)
-    bundle = {'model': final, 'columns': columns, 'tab_cfg': M.TAB_CFG, 'lgb_params': M.LGB_PARAMS, 'fuse_w': M.FUSE_W,
+    er = M.pressure_ranges(pool)
+    table = M.range_table(er)                                               # 구성별 압력 범위 중앙값 (추론 때 쓰는 유일한 학습 통계)
+    Qp = M.pressure_features(pool, table, own_range=M.loo_ranges(er))       # 학습 행은 '자기 실험을 뺀' 추정값으로 계산
+    final23 = M.build_model().fit(pd.concat([Xp, Qp], axis=1)[columns23], y)
+    bundle = {'model': final, 'columns': columns, 'model23': final23, 'columns23': columns23, 'range_table': table,
+              'tab_cfg': M.TAB_CFG, 'lgb_params': M.LGB_PARAMS, 'fuse_w': M.FUSE_W,
               'train_rows': len(pool), 'train_experiments': int(pool.experiment_id.nunique()), 'validation_scores': scores}
     joblib.dump(bundle, args.weights_dir / 'tab_lgbm.joblib', compress=3)
-    print(f'저장: {args.weights_dir / "tab_lgbm.joblib"} (피처 {len(columns)}개)', flush=True)
+    print(f'저장: {args.weights_dir / "tab_lgbm.joblib"} (기본 모델 피처 {len(columns)}개, 2·3단계 재판정 모델 피처 {len(columns23)}개)', flush=True)
 
     # ---------------- (3) CNN 가중치 ----------------
     dst = args.weights_dir / 'cnn_pairdiff.pt'

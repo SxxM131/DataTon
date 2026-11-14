@@ -9,9 +9,13 @@
 처리 순서
   1. 입력 CSV의 행만 읽는다. 이미지 경로 연결 → 이미지 색 통계(이미지마다 독립).
   2. 테이블 피처 266개 + 규칙 피처 30개: 실험별 relative_time_s 정렬 후 과거·현재 관측만 사용 (초 기준 윈도우).
-  3. LightGBM(weights/tab_lgbm.joblib) → P_tab
+  3. LightGBM 기본 모델(weights/tab_lgbm.joblib) → P_tab
+     2·3단계 재판정 모델(같은 파일): 2의 피처 + 압력 상승 피처(과거 관측 + 학습 때 저장한 구성별 압력 범위 중앙값) → P_tab23
   4. pairdiff CNN(weights/cnn_pairdiff.pt): 현재 + 같은 실험의 직전 관측 프레임 + 차이 → P_cnn (1장씩, 결정적 설정)
-  5. P ∝ P_tab^0.8 · P_cnn^0.2 → label = argmax + 1 (1~6 정수), 입력 CSV 행 순서로 저장 (index=False)
+  5. P ∝ P_tab^0.8 · P_cnn^0.2 → label = argmax + 1 (1~6 정수)
+  6. label이 2 또는 3인 행만 P_tab23 의 p2·p3 중 큰 쪽으로 다시 정한다 (다른 단계는 그대로, 이미지 확률은 섞지 않음).
+  7. 각형 28Ah 가열·각형 280Ah 과충전 실험에서 label이 5인데 전압 급락 이후 온도 급상승이 아직 관측되지 않았으면 4로 되돌린다.
+     입력 CSV 행 순서로 저장 (index=False)
 입력 행만으로 계산하므로 행 순서를 섞거나, 실험 일부만 넣거나, 실험별 앞부분만 넣어도 같은 행에는 같은 예측이 나온다.
 """
 import argparse
@@ -56,6 +60,8 @@ def main():
     color = M.extract_image_features(frame, paths)
     X = M.build_features(frame, color)[bundle['columns']]
     p_tab = bundle['model'].predict_proba(X)
+    X23 = pd.concat([X, M.pressure_features(frame, bundle['range_table'])], axis=1)[bundle['columns23']]
+    p_tab23 = bundle['model23'].predict_proba(X23)
 
     # --- 이미지 CNN ---
     cnn = M.load_cnn(args.weights_dir / 'cnn_pairdiff.pt', dev)
@@ -64,7 +70,9 @@ def main():
 
     # --- 후기 융합 ---
     p = M.fuse(p_tab, p_cnn, bundle['fuse_w'])
-    pred = pd.Series(M.to_label(p), index=frame.sample_id.values)
+    label = M.redecide_23(M.to_label(p), p_tab23)           # 2·3단계만 재판정 (테이블 단독 확률)
+    label = M.gate_stage5(label, frame)                     # 온도 급상승 근거 없는 5단계 → 4단계
+    pred = pd.Series(label, index=frame.sample_id.values)
 
     if args.sample_submission is not None:
         order = pd.read_csv(args.sample_submission, dtype={'sample_id': 'string'})['sample_id']
@@ -77,7 +85,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     submission.to_csv(args.output, index=False)
     if args.save_proba is not None:
-        pd.to_pickle({'sample_id': frame.sample_id.tolist(), 'p_tab': p_tab, 'p_cnn': p_cnn, 'p': p}, args.save_proba)
+        pd.to_pickle({'sample_id': frame.sample_id.tolist(), 'p_tab': p_tab, 'p_tab23': p_tab23, 'p_cnn': p_cnn, 'p': p}, args.save_proba)
     print(f'저장: {args.output} ({len(submission)}행, device={dev}, {time.time() - t0:.1f}s) '
           f'분포 {submission.label.value_counts().sort_index().to_dict()}')
 
