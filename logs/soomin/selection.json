@@ -1,0 +1,35 @@
+{
+  "baseline_f1": 0.9254093783937504,
+  "baseline_blank_recolor": 0.05802886091495241,
+  "baseline_blank_cached_color": 0.0,
+  "selected": "C_img10_fuse_w0.1",
+  "selected_delta": 0.009528227125564004,
+  "selected_blank": 0.013662879950875038,
+  "selected_f1": 0.9349376055193144,
+  "cnn_source": "artifacts/val_testlike_proba_trainonly_cnn.joblib",
+  "train_only_exps": 78,
+  "n_test_like": 6514,
+  "elapsed_s": 36.2341845035553,
+  "img10_names": [
+    "img10_pt_frac50",
+    "img10_pt_frac70",
+    "img10_pt_frac90",
+    "img10_pt_p90",
+    "img10_pt_p99",
+    "img10_d_pt_frac50",
+    "img10_d_pt_frac70",
+    "img10_d_pt_frac90",
+    "img10_d_pt_p90",
+    "img10_d_pt_p99"
+  ],
+  "test_blank_change_rate_check_repro": 0.0055056505360765,
+  "test_blank_change_rate_check_submission": 0.0055,
+  "checks": {
+    "check_repro": "pass (logs/check_repro.json)",
+    "check_robust": "pass (logs/check_robust.json)",
+    "check_submission": "pass (logs/check_submission.log)"
+  },
+  "submission": "submissions/img10_fuse01_v7gates.csv",
+  "cnn_train_only_verified": true,
+  "cnn_train_only_note": "artifacts/val_testlike_proba_trainonly_cnn.joblib; weights differ from cnn_pairdiff.pt (full)"
+}

@@ -405,6 +405,45 @@ def build_features(frame: pd.DataFrame, image_features: pd.DataFrame) -> pd.Data
 
 
 # ---------------------------------------------------------------------------
+# 4b. 이미지 비율 10피처 (크기 불변: 고온면적비율·p90·p99 + 직전 프레임 대비 변화)
+#     기존 pt_* 윈도우 피처 대신 쓰며, 센서·규칙 피처와 결합한다 (datathon_img 선택안 C).
+# ---------------------------------------------------------------------------
+IMG10_BASE = ['pt_frac50', 'pt_frac70', 'pt_frac90', 'pt_p90', 'pt_p99']
+
+
+def is_image_col(name: str) -> bool:
+    return name.startswith('pt_') or name == 'white_frac' or name.startswith('r_img')
+
+
+def color_delta10(frame: pd.DataFrame, image_features: pd.DataFrame) -> pd.DataFrame:
+    """비율 5개 + 직전 관측 대비 변화 5개. 실험별 시간순, 과거만 (첫 행 변화=0)."""
+    c = image_features.reindex(frame['sample_id'].astype(str).values)
+    base = c[IMG10_BASE].astype(float).to_numpy()
+    n = len(frame)
+    delta = np.zeros_like(base)
+    eid = frame['experiment_id'].astype(str).to_numpy()
+    sid = frame['sample_id'].astype(str).to_numpy()
+    t = pd.to_numeric(frame['relative_time_s'], errors='coerce').to_numpy(dtype=float)
+    for _, idx in pd.Series(np.arange(n)).groupby(eid, sort=False).indices.items():
+        idx = idx[np.lexsort((sid[idx], t[idx]))]
+        x = base[idx]
+        d = np.zeros_like(x)
+        d[1:] = x[1:] - x[:-1]
+        delta[idx] = d
+    cols = {f'img10_{k}': base[:, i] for i, k in enumerate(IMG10_BASE)}
+    cols.update({f'img10_d_{k}': delta[:, i] for i, k in enumerate(IMG10_BASE)})
+    out = pd.DataFrame(cols)
+    out.index = frame.index
+    return out
+
+
+def build_features_img10(frame: pd.DataFrame, image_features: pd.DataFrame, non_img_columns: list[str]) -> pd.DataFrame:
+    """센서·규칙 등 non-image 열 + img10 10개 (index = frame.index)."""
+    full = build_features(frame, image_features)
+    img10 = color_delta10(frame, image_features)
+    return pd.concat([full[non_img_columns], img10], axis=1)
+
+# ---------------------------------------------------------------------------
 # 5. 압력 상승 피처 (experiments/stage3/presrise.py, 열 이름 q_*) — 2·3단계 재판정 모델 전용
 #    3단계는 '표면 온도 50~90℃에서 압력이 연속으로 오르기 시작하는 지점'이다 (원본 데이터셋 구축 가이드, 공개 문서).
 #    가이드의 정의는 '20초 뒤 압력'과 '실험 전체 압력 범위로 정규화한 값'을 쓰므로 그대로는 쓸 수 없다
